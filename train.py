@@ -255,6 +255,7 @@ def get_metrics(metrics, grd, pred, topks):
     for topk in topks:
         _, col_indice = torch.topk(pred, topk)
     #    col_indice = col_indice.to('cpu')
+        print()
         print('col_indice device: {}'.format(col_indice.device))
         row_indice = torch.zeros_like(col_indice) + torch.arange(pred.shape[0], device=pred.device, dtype=torch.long).view(-1, 1)
 
@@ -263,6 +264,7 @@ def get_metrics(metrics, grd, pred, topks):
 
     #    print('grd: {}'.format(grd))
 
+        print('grd device: {}'.format(grd.device))
         is_hit = grd[row_indice.view(-1), col_indice.view(-1)].view(-1, topk)
         print('is_hit device: {}'.format(is_hit.device))
     #    is_hit = is_hit.to(pred.device)
