@@ -264,6 +264,9 @@ def get_metrics(metrics, grd, pred, topks):
 
     #    print('grd: {}'.format(grd))
 
+        col_indice = col_indice.to('cpu')
+        row_indice = row_indice.to('cpu')
+
         print('grd device: {}'.format(grd.device))
         is_hit = grd[row_indice.view(-1), col_indice.view(-1)].view(-1, topk)
         print('is_hit device: {}'.format(is_hit.device))
