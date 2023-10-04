@@ -302,6 +302,8 @@ def get_ndcg(pred, grd, is_hit, topk):
     for i in range(1, topk+1):
         IDCGs[i] = IDCG(i, topk, device)
 
+    print('IDCGs: {}'.format(IDCGs))
+
     num_pos = grd.sum(dim=1).clamp(0, topk).to(torch.long)
     dcg = DCG(is_hit, topk, device)
 
