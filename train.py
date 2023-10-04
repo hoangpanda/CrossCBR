@@ -233,13 +233,13 @@ def test(model, dataloader, conf):
         for topk in conf["topk"]:
             tmp_metrics[m][topk] = [0, 0]
 
-    device = conf["device"]
+    device = conf["device"] # defaul gpu
     model.eval()
     rs = model.propagate(test=True)
     for users, ground_truth_u_b, train_mask_u_b in dataloader:
         pred_b = model.evaluate(rs, users.to(device))
         pred_b -= 1e8 * train_mask_u_b.to(device)
-        tmp_metrics = get_metrics(tmp_metrics, ground_truth_u_b, pred_b, conf["topk"])
+        tmp_metrics = get_metrics(tmp_metrics, ground_truth_u_b.to(device), pred_b, conf["topk"])
 
     metrics = {}
     for m, topk_res in tmp_metrics.items():
@@ -254,14 +254,14 @@ def get_metrics(metrics, grd, pred, topks):
     tmp = {"recall": {}, "ndcg": {}}
     for topk in topks:
         _, col_indice = torch.topk(pred, topk)
-        col_indice = col_indice.to('cpu')
-        row_indice = torch.zeros_like(col_indice) + torch.arange(pred.shape[0], device='cpu', dtype=torch.long).view(-1, 1)
-        row_indice = row_indice.to('cpu')
+    #    col_indice = col_indice.to('cpu')
+        row_indice = torch.zeros_like(col_indice) + torch.arange(pred.shape[0], device=pred.device, dtype=torch.long).view(-1, 1)
+    #    row_indice = row_indice.to('cpu')
 
         print('grd: {}'.format(grd))
 
         is_hit = grd[row_indice.view(-1), col_indice.view(-1)].view(-1, topk)
-        is_hit = is_hit.to(pred.device)
+    #    is_hit = is_hit.to(pred.device)
 
         tmp["recall"][topk] = get_recall(pred, grd, is_hit, topk)
         tmp["ndcg"][topk] = get_ndcg(pred, grd, is_hit, topk)
