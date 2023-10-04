@@ -23,7 +23,7 @@ Youshu:
   lrs: [1.0e-3] # learning rate
   l2_regs: [1.0e-4] # the l2 regularization weight: lambda_2
   #c_lambdas: [0.04] # the contrastive loss weight: lambda_1
-  c_lambdas: [0.06]
+  c_lambdas: [0.04]
   c_temps: [0.25] # the temperature in the contrastive loss: tau
 
   epochs: 100 # number of epochs to train
