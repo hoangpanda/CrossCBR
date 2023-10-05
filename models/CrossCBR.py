@@ -237,7 +237,7 @@ class CrossCBR(nn.Module):
         return c_loss
 
 
-    def cal_loss(self, users_feature, bundles_feature):
+    def cal_loss(self, users_feature, bundles_feature, alpha_c_loss=0.5):
         # IL: item_level, BL: bundle_level
         # [bs, 1, emb_size]
         IL_users_feature, BL_users_feature = users_feature
@@ -246,18 +246,16 @@ class CrossCBR(nn.Module):
         # [bs, 1+neg_num]
         alpha_pred = 1.5
         pred = torch.sum(IL_users_feature * IL_bundles_feature, 2)*alpha_pred + torch.sum(BL_users_feature * BL_bundles_feature, 2)*(2-alpha_pred)
-        bpr_loss = cal_bpr_loss(pred)
-
+        bpr_loss = cal_bpr_loss(pred)   
+        
         # cl is abbr. of "contrastive loss"
         u_cross_view_cl = self.cal_c_loss(IL_users_feature, BL_users_feature)
         b_cross_view_cl = self.cal_c_loss(IL_bundles_feature, BL_bundles_feature)
 
         c_losses = [u_cross_view_cl, b_cross_view_cl]
-
-        alpha_c_loss = 0.8
         c_loss = u_cross_view_cl*alpha_c_loss + b_cross_view_cl*(1-alpha_c_loss)
-
-    #    c_loss = sum(c_losses) / len(c_losses)
+        c_loss = c_loss*0.5
+    #   c_loss = sum(c_losses) / len(c_losses)
 
         return bpr_loss, c_loss
 
