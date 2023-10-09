@@ -9,16 +9,16 @@ Youshu:
   # the following are the best settings
   aug_type: "ED" # options: ED, MD, OP
   ed_interval: 1 # by how many epochs to dropout edge, default is 1
-  embedding_sizes: [64, 128] # the embedding size for user, bundle, and item
+  embedding_sizes: [64] # the embedding size for user, bundle, and item
   num_layerss: [1] # number of layers for the infomation progagation over the item- and bundle-level graphs
 
   # the following dropout rates are with respect to the "aug_type", i.e., if aug_type is ED, the following dropout rates are for ED.
-  #item_level_ratios: [0.2] # the dropout ratio for item-view graph
-  item_level_ratios: [0.1, 0.15, 0.2]
-  #bundle_level_ratios: [0.2] # the dropout ratio for bundle-view graph
-  bundle_level_ratios: [0.1, 0.15, 0.2]
-  #bundle_agg_ratios: [0.2] # the dropout ratio for bundle-item affiliation graph
-  bundle_agg_ratios: [0.1, 0.15, 0.2]
+  item_level_ratios: [0.2] # the dropout ratio for item-view graph
+  #item_level_ratios: [0.1, 0.15, 0.2]
+  bundle_level_ratios: [0.2] # the dropout ratio for bundle-view graph
+  #bundle_level_ratios: [0.1, 0.15, 0.2]
+  bundle_agg_ratios: [0.2] # the dropout ratio for bundle-item affiliation graph
+  #bundle_agg_ratios: [0.1, 0.15, 0.2]
 
   lrs: [1.0e-3] # learning rate
   l2_regs: [1.0e-4] # the l2 regularization weight: lambda_2
@@ -30,7 +30,7 @@ Youshu:
   # fill alpha_c_loss 
   #alpha_c_loss: [0, 1] # can split into 10 parts
 
-  epochs: 100 # number of epochs to train
+  epochs: 1 # number of epochs to train
   test_interval: 5 # by how many epochs to run the validation and testing.
 
 

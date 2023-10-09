@@ -29,6 +29,7 @@ def get_cmd():
 
 
 def main():
+    print('THIS IS MAIN FUNCTION')
     conf = yaml.safe_load(open("./config.yaml"))
     print("load config file done!")
 
@@ -108,23 +109,40 @@ def main():
         # model
         if conf['model'] == 'CrossCBR':
             model = CrossCBR(conf, dataset.graphs).to(device)
+            #print('LOADED MODEL')
         else:
             raise ValueError("Unimplemented model %s" %(conf["model"]))
 
+        #print('MODEL INFOR: {}'.format(model))
+        #print(model.ui_graph)
+        #x = model.item_level_graph_ori
+        #print(x)
+        
+
         optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=conf["l2_reg"])
 
+        #print(f'dataset.graph: {dataset.graphs}')
+
         batch_cnt = len(dataset.train_loader)
+    #    print(f'batch_cnt: {batch_cnt}')
+
         test_interval_bs = int(batch_cnt * conf["test_interval"])
         ed_interval_bs = int(batch_cnt * conf["ed_interval"])
 
         best_metrics, best_perform = init_best_metrics(conf)
         best_epoch = 0
+    #    print(f'l2_regs: {conf["l2_regs"]}')
+        # conf['epochs'] = 0
         for epoch in range(conf['epochs']):
             epoch_anchor = epoch * batch_cnt
+        #    print(f'epoch_anchor: {epoch_anchor}')
             model.train(True)
             pbar = tqdm(enumerate(dataset.train_loader), total=len(dataset.train_loader))
 
+
             for batch_i, batch in pbar:
+                # batch: data
+                # batch_i: index of data
                 model.train(True)
                 optimizer.zero_grad()
                 batch = [x.to(device) for x in batch]
@@ -134,7 +152,18 @@ def main():
                 if conf["aug_type"] == "ED" and (batch_anchor+1) % ed_interval_bs == 0:
                     ED_drop = True
                 bpr_loss, c_loss = model(batch, ED_drop=ED_drop)
-                loss = bpr_loss + conf["c_lambda"] * c_loss
+
+                loss_l2 = 0
+                for param in model.parameters():
+                    loss_l2 += torch.norm(param, 2)
+
+                #loss = bpr_loss + conf["c_lambda"] * c_loss + conf["l2_regs"]*loss_l2
+                print(f'bpr_loss: {bpr_loss}')
+                print(f'c_loss: {c_loss}')
+                print(f'loss_l2: {loss_l2}')
+                loss = bpr_loss + conf["c_lambda"] * c_loss + conf["l2_reg"] * loss_l2
+
+                pass
                 loss.backward()
                 optimizer.step()
 

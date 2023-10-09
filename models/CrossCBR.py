@@ -110,11 +110,20 @@ class CrossCBR(nn.Module):
 
 
     def get_item_level_graph_ori(self):
-        ui_graph = self.ui_graph
+        ui_graph = self.ui_graph # user item
         device = self.device
         item_level_graph = sp.bmat([[sp.csr_matrix((ui_graph.shape[0], ui_graph.shape[0])), ui_graph], [ui_graph.T, sp.csr_matrix((ui_graph.shape[1], ui_graph.shape[1]))]])
-        self.item_level_graph_ori = to_tensor(laplace_transform(item_level_graph)).to(device)
 
+        # normalize layer LightGCN
+        #print(f'BEFORE: {item_level_graph}')
+
+        #x = laplace_transform(item_level_graph)
+        # print(f'LAPLACE TRANSFORM: {x}')
+        # print(f'shape of LAPLACE TRANSFORM: {x.shape}')
+        # print(f'type of LAPLACE TRANSFORM: {type(x)}')
+
+        self.item_level_graph_ori = to_tensor(laplace_transform(item_level_graph)).to(device)
+        
 
     def get_bundle_level_graph(self):
         ub_graph = self.ub_graph
@@ -168,6 +177,7 @@ class CrossCBR(nn.Module):
         all_features = [features]
 
         for i in range(self.num_layers):
+            # spmm <=> torch.sparse.mm -> multiply two matrix
             features = torch.spmm(graph, features)
             if self.conf["aug_type"] == "MD" and not test: # !!! important
                 features = mess_dropout(features)
@@ -201,6 +211,7 @@ class CrossCBR(nn.Module):
         if test:
             IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph_ori, self.users_feature, self.items_feature, self.item_level_dropout, test)
         else:
+            # item_level_graph: ui_matrix
             IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph, self.users_feature, self.items_feature, self.item_level_dropout, test)
 
         # aggregate the items embeddings within one bundle to obtain the bundle representation
@@ -254,9 +265,9 @@ class CrossCBR(nn.Module):
 
         c_losses = [u_cross_view_cl, b_cross_view_cl]
         alpha_c_loss = 0.1
-        c_loss = u_cross_view_cl*alpha_c_loss + b_cross_view_cl*(1-alpha_c_loss)
-        c_loss = c_loss*0.5
-    #   c_loss = sum(c_losses) / len(c_losses)
+       # c_loss = u_cross_view_cl*alpha_c_loss + b_cross_view_cl*(1-alpha_c_loss)
+       # c_loss = c_loss*0.5
+        c_loss = sum(c_losses) / len(c_losses)
 
         return bpr_loss, c_loss
 
@@ -271,6 +282,7 @@ class CrossCBR(nn.Module):
         # users: [bs, 1]
         # bundles: [bs, 1+neg_num]
         users, bundles = batch
+    #    print(f'BATCH: {batch}')
         users_feature, bundles_feature = self.propagate()
 
         users_embedding = [i[users].expand(-1, bundles.shape[1], -1) for i in users_feature]
