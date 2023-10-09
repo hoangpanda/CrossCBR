@@ -163,7 +163,7 @@ def main():
                 print(f'loss_l2: {loss_l2}')
                 loss = bpr_loss + conf["c_lambda"] * c_loss + conf["l2_reg"] * loss_l2
 
-                pass
+                #pass
                 loss.backward()
                 optimizer.step()
 
