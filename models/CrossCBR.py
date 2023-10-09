@@ -264,10 +264,11 @@ class CrossCBR(nn.Module):
         b_cross_view_cl = self.cal_c_loss(IL_bundles_feature, BL_bundles_feature)
 
         c_losses = [u_cross_view_cl, b_cross_view_cl]
-        alpha_c_loss = 0.1
+        
        # c_loss = u_cross_view_cl*alpha_c_loss + b_cross_view_cl*(1-alpha_c_loss)
        # c_loss = c_loss*0.5
-        c_loss = sum(c_losses) / len(c_losses)
+        alpha_c_loss = 0.8
+        c_loss = (u_cross_view_cl*alpha_c_loss + (1-alpha_c_loss)*b_cross_view_cl) / len(c_losses)
 
         return bpr_loss, c_loss
 
