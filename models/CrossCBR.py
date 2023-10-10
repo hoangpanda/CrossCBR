@@ -174,7 +174,7 @@ class CrossCBR(nn.Module):
 
     def one_propagate(self, graph, A_feature, B_feature, mess_dropout, test):
         print(f'graph: {graph}')
-        print(f'graph indices: {list(graph._indices)')
+        print(f'graph indices: {list(graph._indices)}')
         print(f'A_feature shape: {A_feature.shape}')
         print(f'A_feature: {A_feature}')
         print(f'B_feature shape: {B_feature.shape}')
