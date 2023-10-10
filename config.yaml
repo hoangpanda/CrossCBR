@@ -30,7 +30,7 @@ Youshu:
   # fill alpha_c_loss 
   #alpha_c_loss: [0, 1] # can split into 10 parts
 
-  epochs: 100 # number of epochs to train
+  epochs: 1 # number of epochs to train
   test_interval: 5 # by how many epochs to run the validation and testing.
 
 
