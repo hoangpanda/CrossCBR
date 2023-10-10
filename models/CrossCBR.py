@@ -127,10 +127,13 @@ class CrossCBR(nn.Module):
 
     def get_bundle_level_graph(self):
         ub_graph = self.ub_graph
+        print(f'ub_graph: {ub_graph}')
         device = self.device
         modification_ratio = self.conf["bundle_level_ratio"]
 
         bundle_level_graph = sp.bmat([[sp.csr_matrix((ub_graph.shape[0], ub_graph.shape[0])), ub_graph], [ub_graph.T, sp.csr_matrix((ub_graph.shape[1], ub_graph.shape[1]))]])
+
+        print(f'bundle_level_graph: {bundle_level_graph}')
 
         if modification_ratio != 0:
             if self.conf["aug_type"] == "ED":
@@ -139,6 +142,7 @@ class CrossCBR(nn.Module):
                 bundle_level_graph = sp.coo_matrix((values, (graph.row, graph.col)), shape=graph.shape).tocsr()
 
         self.bundle_level_graph = to_tensor(laplace_transform(bundle_level_graph)).to(device)
+        print(f'bundle_level_graph: {bundle_level_graph}')
 
 
     def get_bundle_level_graph_ori(self):
@@ -173,13 +177,13 @@ class CrossCBR(nn.Module):
 
 
     def one_propagate(self, graph, A_feature, B_feature, mess_dropout, test):
-        print(f'graph: {graph}')
-        graph_indices = graph.indices
-        print(f'graph indices: {graph_indices}   ')
-        print(f'A_feature shape: {A_feature.shape}')
-        print(f'A_feature: {A_feature}')
-        print(f'B_feature shape: {B_feature.shape}')
-        print(f'B_feature: {B_feature}')
+        # print(f'graph: {graph}')
+        # graph_indices = graph.indices
+        # print(f'graph indices: {graph_indices}   ')
+        # print(f'A_feature shape: {A_feature.shape}')
+        # print(f'A_feature: {A_feature}')
+        # print(f'B_feature shape: {B_feature.shape}')
+        # print(f'B_feature: {B_feature}')
         features = torch.cat((A_feature, B_feature), 0)
         all_features = [features]
 
