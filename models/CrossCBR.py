@@ -174,7 +174,9 @@ class CrossCBR(nn.Module):
 
     def one_propagate(self, graph, A_feature, B_feature, mess_dropout, test):
         print(f'graph: {graph}')
+        print(f'A_feature shape: {A_feature.shape}')
         print(f'A_feature: {A_feature}')
+        print(f'B_feature shape: {B_feature.shape}')
         print(f'B_feature: {B_feature}')
         features = torch.cat((A_feature, B_feature), 0)
         all_features = [features]
