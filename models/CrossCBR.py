@@ -173,6 +173,7 @@ class CrossCBR(nn.Module):
 
 
     def one_propagate(self, graph, A_feature, B_feature, mess_dropout, test):
+
         features = torch.cat((A_feature, B_feature), 0)
         all_features = [features]
 
@@ -216,6 +217,7 @@ class CrossCBR(nn.Module):
 
         # aggregate the items embeddings within one bundle to obtain the bundle representation
         IL_bundles_feature = self.get_IL_bundle_rep(IL_items_feature, test)
+        print(f'IL_items_feature: {IL_bundles_feature}')
 
         #  ============================= bundle level propagation =============================
         if test:
@@ -225,6 +227,9 @@ class CrossCBR(nn.Module):
 
         users_feature = [IL_users_feature, BL_users_feature]
         bundles_feature = [IL_bundles_feature, BL_bundles_feature]
+
+        print(f'users_feature: {users_feature}')
+        print(f'bundles_feaature: {bundles_feature}')
 
         return users_feature, bundles_feature
 
@@ -284,6 +289,7 @@ class CrossCBR(nn.Module):
         # bundles: [bs, 1+neg_num]
         users, bundles = batch
     #    print(f'BATCH: {batch}')
+        print('BAT DAU CHAY HAM SELF.PROPAGATE()')
         users_feature, bundles_feature = self.propagate()
 
         users_embedding = [i[users].expand(-1, bundles.shape[1], -1) for i in users_feature]
