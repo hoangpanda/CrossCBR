@@ -228,10 +228,12 @@ class CrossCBR(nn.Module):
         users_feature = [IL_users_feature, BL_users_feature]
         bundles_feature = [IL_bundles_feature, BL_bundles_feature]
 
-        print(f'user_feature shape: {users_feature.shape}')
+        #print(f'user_feature shape: {users_feature.shape}')
+        print(f'type of users_feature: {type(users_feature)}')
         print(f'users_feature: {users_feature}')
 
-        print(f'bundles_feature shape: {bundles_feature.shape}')
+        #print(f'bundles_feature shape: {bundles_feature.shape}')
+        print(f'type of bundles_feature: {type(bundles_feature)}')
         print(f'bundles_feature: {bundles_feature}')
 
         return users_feature, bundles_feature
