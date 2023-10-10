@@ -173,7 +173,9 @@ class CrossCBR(nn.Module):
 
 
     def one_propagate(self, graph, A_feature, B_feature, mess_dropout, test):
-
+        print(f'graph: {graph}')
+        print(f'A_feature: {A_feature}')
+        print(f'B_feature: {B_feature}')
         features = torch.cat((A_feature, B_feature), 0)
         all_features = [features]
 
@@ -229,12 +231,12 @@ class CrossCBR(nn.Module):
         bundles_feature = [IL_bundles_feature, BL_bundles_feature]
 
         #print(f'user_feature shape: {users_feature.shape}')
-        print(f'type of users_feature: {type(users_feature)}')
-        print(f'users_feature: {users_feature}')
+        #print(f'type of users_feature: {type(users_feature)}')
+        #print(f'users_feature: {users_feature}')
 
         #print(f'bundles_feature shape: {bundles_feature.shape}')
-        print(f'type of bundles_feature: {type(bundles_feature)}')
-        print(f'bundles_feature: {bundles_feature}')
+        # print(f'type of bundles_feature: {type(bundles_feature)}')
+        # print(f'bundles_feature: {bundles_feature}')
 
         return users_feature, bundles_feature
 
