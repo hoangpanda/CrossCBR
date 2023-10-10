@@ -107,6 +107,7 @@ class CrossCBR(nn.Module):
                 item_level_graph = sp.coo_matrix((values, (graph.row, graph.col)), shape=graph.shape).tocsr()
 
         self.item_level_graph = to_tensor(laplace_transform(item_level_graph)).to(device)
+        print(f'self.item_level_graph: {self.item_level_graph}')
 
 
     def get_item_level_graph_ori(self):
@@ -127,13 +128,13 @@ class CrossCBR(nn.Module):
 
     def get_bundle_level_graph(self):
         ub_graph = self.ub_graph
-        print(f'ub_graph: {ub_graph}')
+        #print(f'ub_graph: {ub_graph}')
         device = self.device
         modification_ratio = self.conf["bundle_level_ratio"]
 
         bundle_level_graph = sp.bmat([[sp.csr_matrix((ub_graph.shape[0], ub_graph.shape[0])), ub_graph], [ub_graph.T, sp.csr_matrix((ub_graph.shape[1], ub_graph.shape[1]))]])
 
-        print(f'bundle_level_graph: {bundle_level_graph}')
+        #print(f'bundle_level_graph: {bundle_level_graph}')
 
         if modification_ratio != 0:
             if self.conf["aug_type"] == "ED":
@@ -142,7 +143,7 @@ class CrossCBR(nn.Module):
                 bundle_level_graph = sp.coo_matrix((values, (graph.row, graph.col)), shape=graph.shape).tocsr()
 
         self.bundle_level_graph = to_tensor(laplace_transform(bundle_level_graph)).to(device)
-        print(f'bundle_level_graph: {bundle_level_graph}')
+        #print(f'bundle_level_graph: {bundle_level_graph}')
 
 
     def get_bundle_level_graph_ori(self):
