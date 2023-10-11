@@ -274,9 +274,11 @@ class CrossCBR(nn.Module):
         max_v = 40807
         indices_temp = torch.zeros((max_v, max_v))
 
-        for i in range(indices.shape[0]):
-            for j in range(indices.shape[1]):
-                indices_temp[i][j] = 1
+        row_1 = indices[0]
+        row_2 = indices[1]
+
+        for i in range(max_v):
+            indices_temp[indices[row_1][i]][indices[row_2][i]] = 1
 
         indices = torch.unsqueeze(indices_temp, 0)
         print(f'indices: {indices}')
