@@ -264,11 +264,11 @@ class CrossCBR(nn.Module):
         layer = GATLayer(64, 64, num_heads=2)
 
         indices = graph._indices()
-        A_feature = layer(A_feature, indices, print_attn_probs=True)
-        B_feature = layer(B_feature, indices, print_attn_probs=True)
+        A_feature = layer(A_feature.to('cpu'), indices, print_attn_probs=True)
+        B_feature = layer(B_feature.to('cpu'), indices, print_attn_probs=True)
         # features = torch.cat((A_feature, B_feature), 0)
         # all_features = [features]
-        
+
         # for i in range(self.num_layers):
         #     # spmm <=> torch.sparse.mm -> multiply two matrix
         #     features = torch.spmm(graph, features)
