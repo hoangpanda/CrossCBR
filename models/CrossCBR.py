@@ -266,8 +266,14 @@ class CrossCBR(nn.Module):
         indices = graph._indices()
         A_feature = torch.unsqueeze(A_feature, 0)
         B_feature = torch.unsqueeze(B_feature, 0)
+        max_v = 0
+        for i in range(indices.shape[0]):
+            for j in range(indices.shape[1]):
+                if indices[i][j] > max_v:
+                    max_v = indices[i][j]
         indices = torch.unsqueeze(indices, 0)
         print(f'indices: {indices}')
+        print(f'max: {max_v}')
         A_feature = layer(A_feature.to('cpu'), indices.to('cpu'), print_attn_probs=True)
         B_feature = layer(B_feature.to('cpu'), indices.to('cpu'), print_attn_probs=True)
         # features = torch.cat((A_feature, B_feature), 0)
