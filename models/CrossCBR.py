@@ -261,11 +261,12 @@ class CrossCBR(nn.Module):
         # print(f'B_feature shape: {B_feature.shape}')
         # print(f'B_feature: {B_feature}')
 
-        layer = GATLayer(64, 64, num_heads=2)
+        layer = GATLayer(64, 64, num_heads=1)
 
         indices = graph._indices()
         A_feature = torch.unsqueeze(A_feature, 0)
         B_feature = torch.unsqueeze(B_feature, 0)
+        indices = torch.unsqueeze(indices, 0)
         A_feature = layer(A_feature.to('cpu'), indices, print_attn_probs=True)
         B_feature = layer(B_feature.to('cpu'), indices, print_attn_probs=True)
         # features = torch.cat((A_feature, B_feature), 0)
