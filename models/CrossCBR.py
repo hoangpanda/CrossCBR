@@ -267,8 +267,8 @@ class CrossCBR(nn.Module):
         A_feature = torch.unsqueeze(A_feature, 0)
         B_feature = torch.unsqueeze(B_feature, 0)
         indices = torch.unsqueeze(indices, 0)
-        A_feature = layer(A_feature.to('cpu'), indices, print_attn_probs=True)
-        B_feature = layer(B_feature.to('cpu'), indices, print_attn_probs=True)
+        A_feature = layer(A_feature.to('cpu'), indices.to('cpu'), print_attn_probs=True)
+        B_feature = layer(B_feature.to('cpu'), indices.to('cpu'), print_attn_probs=True)
         # features = torch.cat((A_feature, B_feature), 0)
         # all_features = [features]
 
