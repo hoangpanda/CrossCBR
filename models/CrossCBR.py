@@ -425,7 +425,7 @@ class CrossCBR(nn.Module):
         print('BAT DAU CHAY HAM SELF.PROPAGATE()')
         users_feature, bundles_feature = self.propagate()
 
-        uservs_embedding = [i[users].expand(-1, bundles.shape[1], -1) for i in users_feature]
+        users_embedding = [i[users].expand(-1, bundles.shape[1], -1) for i in users_feature]
         bundles_embedding = [i[bundles] for i in bundles_feature]
 
         bpr_loss, c_loss = self.cal_loss(users_embedding, bundles_embedding)
