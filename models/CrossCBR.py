@@ -319,7 +319,7 @@ class CrossCBR(nn.Module):
             embedding_input = 64
             embedding_output= 64
             layerGAT = GAT().to('cpu')
-            print(f'device layerGAT: {layerGAT.device}')
+            #print(f'device layerGAT: {layerGAT.device}')
             features = layerGAT(features, graph.to('cpu'))
             if self.conf["aug_type"] == "MD" and not test: # !!! important
                 features = mess_dropout(features)
