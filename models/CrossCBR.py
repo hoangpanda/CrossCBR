@@ -315,10 +315,10 @@ class CrossCBR(nn.Module):
         print(f'shape all_features: {features.shape}')
         for i in range(self.num_layers):
             # spmm <=> torch.sparse.mm -> multiply two matrix
-            features = torch.spmm(graph, features)
+            features = torch.spmm(graph, features).to('cpu')
             embedding_input = 64
             embedding_output= 64
-            layerGAT = GAT().to('cpu')
+            #layerGAT = GAT().to('cpu')
             #print(f'device layerGAT: {layerGAT.device}')
             #features = layerGAT(features, graph.to('cpu'))
             if self.conf["aug_type"] == "MD" and not test: # !!! important
