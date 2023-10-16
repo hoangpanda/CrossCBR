@@ -318,13 +318,13 @@ class CrossCBR(nn.Module):
             features = torch.spmm(graph.to('cpu'), features)
             embedding_input = 64
             embedding_output= 64
-            #layerGAT = GAT().to('cpu')
+            layerGAT = GAT().to('cpu')
             #print(f'device layerGAT: {layerGAT.device}')
-            #features = layerGAT(features, graph.to('cpu'))
             if self.conf["aug_type"] == "MD" and not test: # !!! important
                 features = mess_dropout(features)
 
-            features = features / (i+2)
+            #features = features / (i+2)
+            features = layerGAT(features, graph.to('cpu'))
             all_features.append(F.normalize(features, p=2, dim=1))
 
         all_features = torch.stack(all_features, 1)
