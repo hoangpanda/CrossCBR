@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import scipy.sparse as sp 
-import torch_geometric.transform as T
+import torch_geometric.transforms as T
 from torch_geometric.nn import GATConv
 
 
