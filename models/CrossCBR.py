@@ -331,7 +331,8 @@ class CrossCBR(nn.Module):
         all_features = torch.sum(all_features, dim=1).squeeze(1)
 
         A_feature, B_feature = torch.split(all_features, (A_feature.shape[0], B_feature.shape[0]), 0)
-
+        A_feature = A_feature.to('cuda:0')
+        B_feature = B_feature.to('cuda:0')
         print(f'device A_feature: {A_feature.device}')
         print(f'device B_feature: {B_feature.device}')
 
