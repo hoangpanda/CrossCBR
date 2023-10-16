@@ -307,9 +307,10 @@ class CrossCBR(nn.Module):
         # print(f'max: {max_v}')
         #A_feature = layer(A_feature.to('cpu'), indices.to('cpu'), print_attn_probs=True)
         #B_feature = layer(B_feature.to('cpu'), indices.to('cpu'), print_attn_probs=True)
-        features = torch.cat((A_feature, B_feature), 0)
+        features = torch.cat((A_feature, B_feature), 0).to('cpu')
         all_features = [features]
         print(f'all_features: {all_features}')
+
         print(f'shape all_features: {features.shape}')
         for i in range(self.num_layers):
             # spmm <=> torch.sparse.mm -> multiply two matrix
