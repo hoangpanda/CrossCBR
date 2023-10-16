@@ -131,7 +131,7 @@ class GAT(nn.Module):
         self.conv1 = GAT()
         self.conv2 = GAT()
     def forward(self, input_embedding_size, output_embedding_size, data_input):
-        x = 
+        pass
 
 
 class CrossCBR(nn.Module):
