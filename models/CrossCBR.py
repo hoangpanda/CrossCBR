@@ -128,10 +128,16 @@ class GAT(nn.Module):
         self.hid = 8
         self.in_head = 8
         self.out_head = 1
-        self.conv1 = GAT()
-        self.conv2 = GAT()
-    def forward(self, input_embedding_size, output_embedding_size, data_input):
-        pass
+        self.embedding_input_size = 64
+        self.embedding_output_size = 64
+        self.conv1 = GAT(self.embedding_input_size, self.hid, heads=self.in_head)
+        self.conv2 = GAT(self.hid*self.in_head, self.embedding_output_size, concat=False, heads=self.out_head)
+    def forward(self, features, graph, embedding_input, embedding_output):
+        x, edge_index = features, graph._indices()
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        x = self.conv2(x, edge_index)
+        return F.log_softmax(x, dim=1)
 
 
 class CrossCBR(nn.Module):
@@ -305,19 +311,22 @@ class CrossCBR(nn.Module):
         all_features = [features]
         print(f'all_features: {all_features}')
         print(f'shape all_features: {features.shape}')
-        # for i in range(self.num_layers):
-        #     # spmm <=> torch.sparse.mm -> multiply two matrix
-        #     features = torch.spmm(graph, features)
-        #     if self.conf["aug_type"] == "MD" and not test: # !!! important
-        #         features = mess_dropout(features)
+        for i in range(self.num_layers):
+            # spmm <=> torch.sparse.mm -> multiply two matrix
+            # features = torch.spmm(graph, features)
+            embedding_input = 64
+            embedding_output= 64
+            features = GAT(features, graph)
+            if self.conf["aug_type"] == "MD" and not test: # !!! important
+                features = mess_dropout(features)
 
-        #     features = features / (i+2)
-        #     all_features.append(F.normalize(features, p=2, dim=1))
+            #features = features / (i+2)
+            #all_features.append(F.normalize(features, p=2, dim=1))
 
-        # all_features = torch.stack(all_features, 1)
-        # all_features = torch.sum(all_features, dim=1).squeeze(1)
+        all_features = torch.stack(all_features, 1)
+        all_features = torch.sum(all_features, dim=1).squeeze(1)
 
-        # A_feature, B_feature = torch.split(all_features, (A_feature.shape[0], B_feature.shape[0]), 0)
+        A_feature, B_feature = torch.split(all_features, (A_feature.shape[0], B_feature.shape[0]), 0)
 
         return A_feature, B_feature
 
