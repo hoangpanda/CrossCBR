@@ -324,8 +324,8 @@ class CrossCBR(nn.Module):
             if self.conf["aug_type"] == "MD" and not test: # !!! important
                 features = mess_dropout(features)
 
-            #features = features / (i+2)
-            #all_features.append(F.normalize(features, p=2, dim=1))
+            features = features / (i+2)
+            all_features.append(F.normalize(features, p=2, dim=1))
 
         all_features = torch.stack(all_features, 1)
         all_features = torch.sum(all_features, dim=1).squeeze(1)
