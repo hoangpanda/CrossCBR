@@ -360,6 +360,10 @@ class CrossCBR(nn.Module):
         else:
             # item_level_graph: ui_matrix
             IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph, self.users_feature, self.items_feature, self.item_level_dropout, test)
+            print(f'users_feature: {self.users_feature}')
+            print(f'items_feature: {self.items_feature}')
+            print(f'IL_users_feature: {IL_users_feature}')
+            print(f'IL_items_feature: {IL_items_feature}')
 
         # aggregate the items embeddings within one bundle to obtain the bundle representation
         IL_bundles_feature = self.get_IL_bundle_rep(IL_items_feature, test)
