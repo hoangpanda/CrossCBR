@@ -316,7 +316,8 @@ class CrossCBR(nn.Module):
             # features = torch.spmm(graph, features)
             embedding_input = 64
             embedding_output= 64
-            features = GAT(features, graph)
+            layerGAT = GAT()
+            features = layerGAT(features, graph)
             if self.conf["aug_type"] == "MD" and not test: # !!! important
                 features = mess_dropout(features)
 
