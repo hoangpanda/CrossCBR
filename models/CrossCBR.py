@@ -332,6 +332,9 @@ class CrossCBR(nn.Module):
 
         A_feature, B_feature = torch.split(all_features, (A_feature.shape[0], B_feature.shape[0]), 0)
 
+        print(f'device A_feature: {A_feature.device}')
+        print(f'device B_feature: {B_feature.device}')
+
         return A_feature, B_feature
 
 
