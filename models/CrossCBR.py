@@ -270,7 +270,7 @@ class CrossCBR(nn.Module):
 
     def one_propagate(self, graph, A_feature, B_feature, mess_dropout, test):
         print(f'graph: {graph}')
-        graph_indices = graph.indices
+        graph_indices = graph._indices()
         print(f'graph indices: {graph_indices}   ')
         print(f'A_feature shape: {A_feature.shape}')
         print(f'A_feature: {A_feature}')
@@ -301,9 +301,10 @@ class CrossCBR(nn.Module):
         # print(f'max: {max_v}')
         #A_feature = layer(A_feature.to('cpu'), indices.to('cpu'), print_attn_probs=True)
         #B_feature = layer(B_feature.to('cpu'), indices.to('cpu'), print_attn_probs=True)
-        # features = torch.cat((A_feature, B_feature), 0)
-        # all_features = [features]
-
+        features = torch.cat((A_feature, B_feature), 0)
+        all_features = [features]
+        print(f'all_features: {all_features}')
+        print(f'shape all_features: {features.shape}')
         # for i in range(self.num_layers):
         #     # spmm <=> torch.sparse.mm -> multiply two matrix
         #     features = torch.spmm(graph, features)
