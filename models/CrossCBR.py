@@ -308,6 +308,7 @@ class CrossCBR(nn.Module):
         #A_feature = layer(A_feature.to('cpu'), indices.to('cpu'), print_attn_probs=True)
         #B_feature = layer(B_feature.to('cpu'), indices.to('cpu'), print_attn_probs=True)
         features = torch.cat((A_feature, B_feature), 0).to('cpu')
+        print(f'device features: {features.device}')
         all_features = [features]
         print(f'all_features: {all_features}')
 
@@ -318,7 +319,8 @@ class CrossCBR(nn.Module):
             embedding_input = 64
             embedding_output= 64
             layerGAT = GAT().to('cpu')
-            features = layerGAT(features, graph)
+            print(f'device layerGAT: {layerGAT.device}')
+            features = layerGAT(features, graph.to('cpu'))
             if self.conf["aug_type"] == "MD" and not test: # !!! important
                 features = mess_dropout(features)
 
