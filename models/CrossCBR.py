@@ -5,6 +5,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import scipy.sparse as sp 
+import torch_geometric.transform as T
+from torch_geometric.nn import GATConv
 
 
 def cal_bpr_loss(pred):
@@ -118,6 +120,18 @@ class GATLayer(nn.Module):
             node_feats = node_feats.mean(dim=2)
 
         return node_feats
+
+
+class GAT(nn.Module): 
+    def __init__(self):
+        super(GAT, self).__init__()
+        self.hid = 8
+        self.in_head = 8
+        self.out_head = 1
+        self.conv1 = GAT()
+        self.conv2 = GAT()
+    def forward(self, input_embedding_size, output_embedding_size, data_input):
+        x = 
 
 
 class CrossCBR(nn.Module):
@@ -252,37 +266,39 @@ class CrossCBR(nn.Module):
         self.bundle_agg_graph_ori = to_tensor(bi_graph).to(device)
 
 
+
+
     def one_propagate(self, graph, A_feature, B_feature, mess_dropout, test):
-        # print(f'graph: {graph}')
-        # graph_indices = graph.indices
-        # print(f'graph indices: {graph_indices}   ')
-        # print(f'A_feature shape: {A_feature.shape}')
-        # print(f'A_feature: {A_feature}')
-        # print(f'B_feature shape: {B_feature.shape}')
-        # print(f'B_feature: {B_feature}')
+        print(f'graph: {graph}')
+        graph_indices = graph.indices
+        print(f'graph indices: {graph_indices}   ')
+        print(f'A_feature shape: {A_feature.shape}')
+        print(f'A_feature: {A_feature}')
+        print(f'B_feature shape: {B_feature.shape}')
+        print(f'B_feature: {B_feature}')
 
-        layer = GATLayer(64, 64, num_heads=1)
+        #layer = GATLayer(64, 64, num_heads=1)
 
-        indices = graph._indices()
-        A_feature = torch.unsqueeze(A_feature, 0)
-        B_feature = torch.unsqueeze(B_feature, 0)
+        #indices = graph._indices()
+        #A_feature = torch.unsqueeze(A_feature, 0)
+        #B_feature = torch.unsqueeze(B_feature, 0)
         #max_v = 0
         # for i in range(indices.shape[0]):
         #     for j in range(indices.shape[1]):
         #         if indices[i][j] > max_v:
                     # max_v = indices[i][j]
-        max_v = 40807
-        indices_temp = torch.zeros((max_v, max_v))
+        #max_v = 40807
+        # indices_temp = torch.zeros((max_v, max_v))
 
-        row_1 = indices[0]
-        row_2 = indices[1]
+        # row_1 = indices[0]
+        # row_2 = indices[1]
 
-        for i in range(max_v):
-            indices_temp[indices[row_1][i]][indices[row_2][i]] = 1
+        # for i in range(max_v):
+            # indices_temp[indices[row_1][i]][indices[row_2][i]] = 1
 
-        indices = torch.unsqueeze(indices_temp, 0)
-        print(f'indices: {indices}')
-        print(f'max: {max_v}')
+        #indices = torch.unsqueeze(indices_temp, 0)
+        # print(f'indices: {indices}')
+        # print(f'max: {max_v}')
         A_feature = layer(A_feature.to('cpu'), indices.to('cpu'), print_attn_probs=True)
         B_feature = layer(B_feature.to('cpu'), indices.to('cpu'), print_attn_probs=True)
         # features = torch.cat((A_feature, B_feature), 0)
@@ -409,7 +425,7 @@ class CrossCBR(nn.Module):
         print('BAT DAU CHAY HAM SELF.PROPAGATE()')
         users_feature, bundles_feature = self.propagate()
 
-        users_embedding = [i[users].expand(-1, bundles.shape[1], -1) for i in users_feature]
+        uservs_embedding = [i[users].expand(-1, bundles.shape[1], -1) for i in users_feature]
         bundles_embedding = [i[bundles] for i in bundles_feature]
 
         bpr_loss, c_loss = self.cal_loss(users_embedding, bundles_embedding)
