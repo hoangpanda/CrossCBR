@@ -318,7 +318,7 @@ class CrossCBR(nn.Module):
 
         # A_feature, B_feature = torch.split(all_features, (A_feature.shape[0], B_feature.shape[0]), 0)
 
-        return A_feature[0], B_feature[0]
+        return A_feature, B_feature
 
 
 
