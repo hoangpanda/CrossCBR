@@ -135,7 +135,7 @@ class GAT(nn.Module):
         self.conv2 = GATv2Conv(self.hid*self.in_head, self.embedding_output_size, heads=self.out_head)
         self.GCNconv1 = GCNConv(self.embedding_input_size, self.embedding_output_size)
         self.GraphGCN_conv1 = GraphConv(self.embedding_input_size, self.embedding_output_size)
-    
+
     def forward(self, features, graph):
         x, edge_index = features, graph._indices()
         x = F.dropout(x, p=0.5, training=self.training)
@@ -143,8 +143,8 @@ class GAT(nn.Module):
         x = F.relu(x)
         x = F.dropout(x, p=0.5, training=self.training)
         x = self.conv2(x, edge_index)
-        return x;
-        #return F.log_softmax(x, dim=1)
+        #return x;
+        return F.log_softmax(x, dim=1)
 
 
 class GNN(torch.nn.Module):
