@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import scipy.sparse as sp 
 import torch_geometric.transforms as T
-from torch_geometric.nn import GATConv
+from torch_geometric.nn import GATConv, GATv2Conv
 from GraphGAT import GraphGAT
 
 
@@ -131,7 +131,7 @@ class GAT(nn.Module):
         self.out_head = 1
         self.embedding_input_size = 64
         self.embedding_output_size = 64
-        self.conv1 = GATConv(self.embedding_input_size, self.embedding_output_size, heads=1)
+        self.conv1 = GATv2Conv(self.embedding_input_size, self.embedding_output_size, heads=1)
         self.conv2 = GATConv(self.hid*self.in_head, self.embedding_output_size, concat=False, heads=self.out_head)
     def forward(self, features, graph):
         x, edge_index = features, graph._indices()
