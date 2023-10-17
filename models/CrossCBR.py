@@ -131,15 +131,15 @@ class GAT(nn.Module):
         self.out_head = 1
         self.embedding_input_size = 64
         self.embedding_output_size = 64
-        self.conv1 = GATConv(self.embedding_input_size, self.hid, heads=self.in_head)
+        self.conv1 = GATConv(self.embedding_input_size, self.embedding_output_size, heads=1)
         self.conv2 = GATConv(self.hid*self.in_head, self.embedding_output_size, concat=False, heads=self.out_head)
     def forward(self, features, graph):
         x, edge_index = features, graph._indices()
         x = F.dropout(x, p=0.3, training=self.training)
         x = self.conv1(x, edge_index)
-        x = F.relu(x)
-        x = F.dropout(x, p=0.3, training=self.training)
-        x = self.conv2(x, edge_index)
+        #x = F.relu(x)
+        #x = F.dropout(x, p=0.3, training=self.training)
+        #x = self.conv2(x, edge_index)
         return F.log_softmax(x, dim=1)
 
 
@@ -387,7 +387,7 @@ class CrossCBR(nn.Module):
                 features = mess_dropout(features)
 
             #features = features / (i+2)
-            features = layerGAT(features, graph._indices().to('cpu'))
+            features = layerGAT(features, graph.to('cpu'))
             all_features.append(F.normalize(features, p=2, dim=1))
 
         all_features = torch.stack(all_features, 1)
