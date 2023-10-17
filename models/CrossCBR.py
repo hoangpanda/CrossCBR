@@ -134,7 +134,7 @@ class GAT(nn.Module):
         self.conv1 = GATv2Conv(self.embedding_input_size, self.embedding_output_size, heads=1)
         self.conv2 = GATConv(self.hid*self.in_head, self.embedding_output_size, concat=False, heads=self.out_head)
         self.GCNconv1 = GCNConv(self.embedding_input_size, self.embedding_output_size)
-        self.GraphGCN_conv1 = GraphConv(self.embedding_input_size, sle.embedding_output_size)
+        self.GraphGCN_conv1 = GraphConv(self.embedding_input_size, self.embedding_output_size)
 
     def forward(self, features, graph):
         x, edge_index = features, graph._indices()
