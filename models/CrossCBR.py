@@ -7,6 +7,7 @@ import torch.nn.functional as F
 import scipy.sparse as sp 
 import torch_geometric.transforms as T
 from torch_geometric.nn import GATConv
+from GraphGAT import GraphGAT
 
 
 def cal_bpr_loss(pred):
@@ -141,6 +142,65 @@ class GAT(nn.Module):
         x = self.conv2(x, edge_index)
         return F.log_softmax(x, dim=1)
 
+
+class GNN(torch.nn.Module):
+    def __init__(self, features, edge_index, batch_size, num_user, num_item, dim_id, dim_latent=None):
+        super(GNN, self).__init__()
+        self.batch_size = batch_size
+        self.num_user = num_user
+        self.num_item = num_item
+        self.dim_id = dim_id
+        self.dim_feat = features.size(1)
+        self.dim_latent = dim_latent
+        self.edge_index = edge_index
+        self.features = features
+
+        self.preference = nn.Embedding(num_user, self.dim_latent)
+        nn.init.xavier_normal_(self.preference.weight).cuda()
+        if self.dim_latent:
+            #self.preference = nn.init.xavier_normal_(torch.rand((num_user, self.dim_latent), requires_grad=True)).cuda()
+            self.MLP = nn.Linear(self.dim_feat, self.dim_latent)
+
+            self.conv_embed_1 = GraphGAT(self.dim_latent, self.dim_latent, aggr='add')
+            nn.init.xavier_normal_(self.conv_embed_1.weight)
+            self.linear_layer1 = nn.Linear(self.dim_latent, self.dim_id)
+            nn.init.xavier_normal_(self.linear_layer1.weight)
+            self.g_layer1 = nn.Linear(self.dim_latent, self.dim_id)    
+            nn.init.xavier_normal_(self.g_layer1.weight) 
+        else:
+            #self.preference = nn.init.xavier_normal_(torch.rand((num_user, self.dim_feat), requires_grad=True)).cuda()
+            self.conv_embed_1 = GraphGAT(self.dim_feat, self.dim_feat, aggr='add')
+            nn.init.xavier_normal_(self.conv_embed_1.weight)
+            self.linear_layer1 = nn.Linear(self.dim_feat, self.dim_id)
+            nn.init.xavier_normal_(self.linear_layer1.weight)
+            self.g_layer1 = nn.Linear(self.dim_feat, self.dim_id)    
+            nn.init.xavier_normal_(self.g_layer1.weight)
+
+        self.conv_embed_2 = GraphGAT(self.dim_id, self.dim_id, aggr='add')
+        nn.init.xavier_normal_(self.conv_embed_2.weight)
+        self.linear_layer2 = nn.Linear(self.dim_id, self.dim_id)
+        nn.init.xavier_normal_(self.linear_layer2.weight)
+        self.g_layer2 = nn.Linear(self.dim_id, self.dim_id)    
+        nn.init.xavier_normal_(self.g_layer2.weight)
+
+    def forward(self, id_embedding):
+        temp_features = torch.tanh(self.MLP(self.features)) if self.dim_latent else self.features
+        x = torch.cat((self.preference.weight, temp_features), dim=0)
+        x = F.normalize(x).cuda()
+
+        #layer-1
+        h = F.leaky_relu(self.conv_embed_1(x, self.edge_index, None))
+        x_hat = F.leaky_relu(self.linear_layer1(x)) + id_embedding.weight
+        x_1 = F.leaky_relu(self.g_layer1(h)+x_hat)
+        return x_1
+        # layer-2
+        h = F.leaky_relu(self.conv_embed_2(x_1, self.edge_index, None))
+        x_hat = F.leaky_relu(self.linear_layer2(x_1)) + id_embedding.weight
+        x_2 = F.leaky_relu(self.g_layer2(h)+x_hat)
+
+        x = torch.cat((x_1, x_2), dim=1)
+
+        return x
 
 class CrossCBR(nn.Module):
     def __init__(self, conf, raw_graph):
@@ -317,7 +377,8 @@ class CrossCBR(nn.Module):
         print(f'shape all_features: {features.shape}')
         for i in range(self.num_layers):
             # spmm <=> torch.sparse.mm -> multiply two matrix
-            features = torch.spmm(graph.to('cpu'), features)
+            #gnn = GNN(64, graph._indices().to('cpu'))
+            #features = torch.spmm(graph.to('cpu'), features)
             embedding_input = 64
             embedding_output= 64
             layerGAT = GAT().to('cpu')
@@ -326,7 +387,7 @@ class CrossCBR(nn.Module):
                 features = mess_dropout(features)
 
             #features = features / (i+2)
-            features = layerGAT(features, graph.to('cpu'))
+            features = layerGAT(features, graph._indices().to('cpu'))
             all_features.append(F.normalize(features, p=2, dim=1))
 
         all_features = torch.stack(all_features, 1)
