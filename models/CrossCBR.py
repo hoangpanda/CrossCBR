@@ -125,8 +125,8 @@ class GATLayer(nn.Module):
 class GAT(nn.Module): 
     def __init__(self):
         super(GAT, self).__init__()
-        self.hid = 8
-        self.in_head = 8
+        self.hid = 4
+        self.in_head = 4
         self.out_head = 1
         self.embedding_input_size = 64
         self.embedding_output_size = 64
@@ -134,8 +134,10 @@ class GAT(nn.Module):
         self.conv2 = GATConv(self.hid*self.in_head, self.embedding_output_size, concat=False, heads=self.out_head)
     def forward(self, features, graph):
         x, edge_index = features, graph._indices()
+        x = F.dropout(x, p=0.3, training=self.training)
         x = self.conv1(x, edge_index)
         x = F.relu(x)
+        x = F.dropout(x, p=0.3, training=self.training)
         x = self.conv2(x, edge_index)
         return F.log_softmax(x, dim=1)
 
