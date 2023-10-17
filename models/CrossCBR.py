@@ -126,24 +126,24 @@ class GATLayer(nn.Module):
 class GAT(nn.Module): 
     def __init__(self):
         super(GAT, self).__init__()
-        self.hid = 4
-        self.in_head = 4
+        self.hid = 8
+        self.in_head = 8
         self.out_head = 1
         self.embedding_input_size = 64
         self.embedding_output_size = 64
-        self.conv1 = GATv2Conv(self.embedding_input_size, self.embedding_output_size, heads=1)
-        self.conv2 = GATConv(self.hid*self.in_head, self.embedding_output_size, concat=False, heads=self.out_head)
+        self.conv1 = GATv2Conv(self.embedding_input_size, self.in_head, heads=self.hid)
+        self.conv2 = GATv2Conv(self.hid*self.in_head, self.embedding_output_size, heads=self.out_head)
         self.GCNconv1 = GCNConv(self.embedding_input_size, self.embedding_output_size)
         self.GraphGCN_conv1 = GraphConv(self.embedding_input_size, self.embedding_output_size)
-
+    
     def forward(self, features, graph):
         x, edge_index = features, graph._indices()
-        x = F.dropout(x, p=0.3, training=self.training)
-        x = self.GraphGCN_conv1(x, edge_index)
+        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.conv2(x, edge_index)
         return x;
-        #x = F.relu(x)
-        #x = F.dropout(x, p=0.3, training=self.training)
-        #x = self.conv2(x, edge_index)
         #return F.log_softmax(x, dim=1)
 
 
