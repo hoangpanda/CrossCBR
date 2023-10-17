@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import scipy.sparse as sp 
 import torch_geometric.transforms as T
-from torch_geometric.nn import GATConv, GATv2Conv
+from torch_geometric.nn import GATConv, GATv2Conv, GCNConv
 from GraphGAT import GraphGAT
 
 
@@ -133,14 +133,16 @@ class GAT(nn.Module):
         self.embedding_output_size = 64
         self.conv1 = GATv2Conv(self.embedding_input_size, self.embedding_output_size, heads=1)
         self.conv2 = GATConv(self.hid*self.in_head, self.embedding_output_size, concat=False, heads=self.out_head)
+        self.GCNconv1 = GCNConv(self.embedding_input_size, self.embedding_output_size)
     def forward(self, features, graph):
         x, edge_index = features, graph._indices()
         x = F.dropout(x, p=0.3, training=self.training)
-        x = self.conv1(x, edge_index)
+        x = self.GCNconv1(x, edge_index)
+        return x;
         #x = F.relu(x)
         #x = F.dropout(x, p=0.3, training=self.training)
         #x = self.conv2(x, edge_index)
-        return F.log_softmax(x, dim=1)
+        #return F.log_softmax(x, dim=1)
 
 
 class GNN(torch.nn.Module):
