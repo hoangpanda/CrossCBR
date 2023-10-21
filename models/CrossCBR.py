@@ -49,8 +49,8 @@ def np_edge_dropout(values, dropout_ratio):
 class GAT(nn.Module): 
     def __init__(self):
         super(GAT, self).__init__()
-        self.hid = 8
-        self.in_head = 8
+        self.hid = 12
+        self.in_head = 12
         self.out_head = 1
         self.embedding_input_size = 64
         self.embedding_output_size = 64
@@ -60,10 +60,10 @@ class GAT(nn.Module):
 
     def forward(self, features, graph):
         x, edge_index = features, graph._indices()
-        x = F.dropout(x, p=0.5, training=self.training)
+        x = F.dropout(x, p=0.4, training=self.training)
         x = self.conv1(x, edge_index)
         x = F.relu(x)
-        x = F.dropout(x, p=0.5, training=self.training)
+        x = F.dropout(x, p=0.4, training=self.training)
         x = self.conv2(x, edge_index)
         return x;
         #return F.log_softmax(x, dim=1)
