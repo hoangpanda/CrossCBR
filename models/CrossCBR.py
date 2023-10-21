@@ -7,8 +7,7 @@ import torch.nn.functional as F
 import scipy.sparse as sp 
 import torch_geometric.transforms as T
 from torch_geometric.nn import GATConv, GATv2Conv, GCNConv, GraphConv, TransformerConv
-from GraphGAT import GraphGAT
-
+from torch_geometric.nn import SuperGATConv
 
 def cal_bpr_loss(pred):
     # pred: [bs, 1+neg_num]
@@ -58,14 +57,16 @@ class GAT(nn.Module):
         self.conv2 = GATv2Conv(self.hid*self.in_head, self.embedding_output_size, heads=self.out_head)
         self.transformer_conv_1 = TransformerConv(self.embedding_input_size, self.in_head, heads=self.hid)
         self.transformer_conv_2 = TransformerConv(self.hid*self.in_head, self.embedding_output_size, heads=self.out_head)
+        self.SuperGATConv_1 = SuperGATConv(self.embedding_input_size, self.in_head, heads=self.hid)
+        self.SuperGATConv_2 = SuperGATConv(self.hid*self.in_head, self.embedding_output_size, heads=self.out_head)
 
     def forward(self, features, graph):
         x, edge_index = features, graph._indices()
-        x = F.dropout(x, p=0.4, training=self.training)
-        x = self.transformer_conv_1(x, edge_index)
+        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.SuperGATConv_1(x, edge_index)
         x = F.relu(x)
-        x = F.dropout(x, p=0.4, training=self.training)
-        x = self.transformer_conv_2(x, edge_index)
+        x = F.dropout(x, p=0.5, training=self.training)
+        x = self.SuperGATConv_2(x, edge_index)
         return x;
         #return F.log_softmax(x, dim=1)
 
@@ -281,7 +282,7 @@ class CrossCBR(nn.Module):
 
         #  ============================= bundle level propagation =============================
         if test:
-            BL_users_feature, BL_bundles_feature = self.one_propagate(self.bundle_level_graph_ori, self.users_feature, self.bundles_feature, self.bundle_level_dropout, test)
+            BL_users_feature, BL_bundles_feature = self.one_propagate(self.bundle_level_graph_ori, self.users_feature, self.bundles_feature, self.bundle_level_dropout, test)   
         else:
             BL_users_feature, BL_bundles_feature = self.one_propagate(self.bundle_level_graph, self.users_feature, self.bundles_feature, self.bundle_level_dropout, test)
 
