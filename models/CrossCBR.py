@@ -26,9 +26,9 @@ def cal_bpr_loss(pred):
 
 
 def laplace_transform(graph):
-    # rowsum_sqrt = sp.diags(1/(np.sqrt(graph.sum(axis=1).A.ravel()) + 1e-8))
-    # colsum_sqrt = sp.diags(1/(np.sqrt(graph.sum(axis=0).A.ravel()) + 1e-8))
-    # graph = rowsum_sqrt @ graph @ colsum_sqrt
+    rowsum_sqrt = sp.diags(1/(np.sqrt(graph.sum(axis=1).A.ravel()) + 1e-8))
+    colsum_sqrt = sp.diags(1/(np.sqrt(graph.sum(axis=0).A.ravel()) + 1e-8))
+    graph = rowsum_sqrt @ graph @ colsum_sqrt
 
     return graph
 
@@ -54,8 +54,8 @@ class GAT(nn.Module):
         self.out_head = 1
         self.embedding_input_size = 64
         self.embedding_output_size = 64
-        self.conv1 = GATConv(self.embedding_input_size, self.in_head, heads=self.hid)
-        self.conv2 = GATConv(self.hid*self.in_head, self.embedding_output_size, heads=self.out_head)
+        self.conv1 = GATv2Conv(self.embedding_input_size, self.in_head, heads=self.hid)
+        self.conv2 = GATv2Conv(self.hid*self.in_head, self.embedding_output_size, heads=self.out_head)
 
 
     def forward(self, features, graph):
@@ -101,6 +101,7 @@ class CrossCBR(nn.Module):
         self.num_layers = self.conf["num_layers"]
         self.c_temp = self.conf["c_temp"]
         self.GAT_model = GAT()
+        self.GraphConv = GraphConv(64, 64)
 
 
     def init_md_dropouts(self):
@@ -220,8 +221,10 @@ class CrossCBR(nn.Module):
         print(f'shape all_features: {features.shape}')
         for i in range(self.num_layers):
             # spmm <=> torch.sparse.mm -> multiply two matrix
-            layerGAT = self.GAT_model.to('cpu')
-            features = layerGAT(features, graph.to('cpu'))
+            # layerGAT = self.GAT_model.to('cpu')
+            # features = layerGAT(features, graph.to('cpu'))
+            layerGraphConv = self.GraphConv().to('cpu')
+            features = layerGraphConv(features, graph.to('cpu')._indices())
             #features = torch.spmm(graph.to('cpu'), features)
             if self.conf["aug_type"] == "MD" and not test: # !!! important
                 features = mess_dropout(features)

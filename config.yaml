@@ -19,7 +19,6 @@ Youshu:
   #bundle_level_ratios: [0.1, 0.15, 0.2]
   bundle_agg_ratios: [0.2] # the dropout ratio for bundle-item affiliation graph
   #bundle_agg_ratios: [0.1, 0.15, 0.2]
-
   lrs: [1.0e-3] # learning rate
   l2_regs: [1.0e-4] # the l2 regularization weight: lambda_2
   #c_lambdas: [0.04] # the contrastive loss weight: lambda_1
