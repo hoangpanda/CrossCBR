@@ -238,6 +238,7 @@ class CrossCBR(nn.Module):
 
         self.num_layers = self.conf["num_layers"]
         self.c_temp = self.conf["c_temp"]
+        self.GAT_model = GAT()
 
 
     def init_md_dropouts(self):
@@ -385,7 +386,7 @@ class CrossCBR(nn.Module):
             #features = torch.spmm(graph.to('cpu'), features)
             embedding_input = 64
             embedding_output= 64
-            layerGAT = GAT().to('cpu')
+            layerGAT = self.GAT_model.to('cpu')
             #print(f'device layerGAT: {layerGAT.device}')
             if self.conf["aug_type"] == "MD" and not test: # !!! important
                 features = mess_dropout(features)
