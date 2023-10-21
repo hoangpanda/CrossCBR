@@ -46,83 +46,6 @@ def np_edge_dropout(values, dropout_ratio):
     values = mask * values
     return values
 
-
-class GATLayer(nn.Module):
-
-    def __init__(self, c_in, c_out, num_heads=1, concat_heads=True, alpha=0.2):
-        """
-        Inputs:
-            c_in - Dimensionality of input features
-            c_out - Dimensionality of output features
-            num_heads - Number of heads, i.e. attention mechanisms to apply in parallel. The
-                        output features are equally split up over the heads if concat_heads=True.
-            concat_heads - If True, the output of the different heads is concatenated instead of averaged.
-            alpha - Negative slope of the LeakyReLU activation.
-        """
-        super().__init__()
-        self.num_heads = num_heads
-        self.concat_heads = concat_heads
-        if self.concat_heads:
-            assert c_out % num_heads == 0, "Number of output features must be a multiple of the count of heads."
-            c_out = c_out // num_heads
-
-        # Sub-modules and parameters needed in the layer
-        self.projection = nn.Linear(c_in, c_out * num_heads)
-        self.a = nn.Parameter(torch.Tensor(num_heads, 2 * c_out)) # One per head
-        self.leakyrelu = nn.LeakyReLU(alpha)
-
-        # Initialization from the original implementation
-        nn.init.xavier_uniform_(self.projection.weight.data, gain=1.414)
-        nn.init.xavier_uniform_(self.a.data, gain=1.414)
-
-    def forward(self, node_feats, adj_matrix, print_attn_probs=False):
-        """
-        Inputs:
-            node_feats - Input features of the node. Shape: [batch_size, c_in]
-            adj_matrix - Adjacency matrix including self-connections. Shape: [batch_size, num_nodes, num_nodes]
-            print_attn_probs - If True, the attention weights are printed during the forward pass (for debugging purposes)
-        """
-        batch_size, num_nodes = node_feats.size(0), node_feats.size(1)
-
-        # Apply linear layer and sort nodes by head
-        node_feats = self.projection(node_feats)
-        node_feats = node_feats.view(batch_size, num_nodes, self.num_heads, -1)
-
-        # We need to calculate the attention logits for every edge in the adjacency matrix
-        # Doing this on all possible combinations of nodes is very expensive
-        # => Create a tensor of [W*h_i||W*h_j] with i and j being the indices of all edges
-        edges = adj_matrix.nonzero(as_tuple=False) # Returns indices where the adjacency matrix is not 0 => edges
-        node_feats_flat = node_feats.view(batch_size * num_nodes, self.num_heads, -1)
-        edge_indices_row = edges[:,0] * num_nodes + edges[:,1]
-        edge_indices_col = edges[:,0] * num_nodes + edges[:,2]
-        a_input = torch.cat([
-            torch.index_select(input=node_feats_flat, index=edge_indices_row, dim=0),
-            torch.index_select(input=node_feats_flat, index=edge_indices_col, dim=0)
-        ], dim=-1) # Index select returns a tensor with node_feats_flat being indexed at the desired positions along dim=0
-
-        # Calculate attention MLP output (independent for each head)
-        attn_logits = torch.einsum('bhc,hc->bh', a_input, self.a)
-        attn_logits = self.leakyrelu(attn_logits)
-
-        # Map list of attention values back into a matrix
-        attn_matrix = attn_logits.new_zeros(adj_matrix.shape+(self.num_heads,)).fill_(-9e15)
-        attn_matrix[adj_matrix[...,None].repeat(1,1,1,self.num_heads) == 1] = attn_logits.reshape(-1)
-
-        # Weighted average of attention
-        attn_probs = F.softmax(attn_matrix, dim=2)
-        if print_attn_probs:
-            print("Attention probs\n", attn_probs.permute(0, 3, 1, 2))
-        node_feats = torch.einsum('bijh,bjhc->bihc', attn_probs, node_feats)
-
-        # If heads should be concatenated, we can do this by reshaping. Otherwise, take mean
-        if self.concat_heads:
-            node_feats = node_feats.reshape(batch_size, num_nodes, -1)
-        else:
-            node_feats = node_feats.mean(dim=2)
-
-        return node_feats
-
-
 class GAT(nn.Module): 
     def __init__(self):
         super(GAT, self).__init__()
@@ -131,10 +54,9 @@ class GAT(nn.Module):
         self.out_head = 1
         self.embedding_input_size = 64
         self.embedding_output_size = 64
-        self.conv1 = GATv2Conv(self.embedding_input_size, self.in_head, heads=self.hid)
-        self.conv2 = GATv2Conv(self.hid*self.in_head, self.embedding_output_size, heads=self.out_head)
-        self.GCNconv1 = GCNConv(self.embedding_input_size, self.embedding_output_size)
-        self.GraphGCN_conv1 = GraphConv(self.embedding_input_size, self.embedding_output_size)
+        self.conv1 = GAT2Conv(self.embedding_input_size, self.in_head, heads=self.hid)
+        self.conv2 = GATConv(self.hid*self.in_head, self.embedding_output_size, heads=self.out_head)
+
 
     def forward(self, features, graph):
         x, edge_index = features, graph._indices()
@@ -143,68 +65,8 @@ class GAT(nn.Module):
         x = F.relu(x)
         x = F.dropout(x, p=0.5, training=self.training)
         x = self.conv2(x, edge_index)
-        #return x;
-        return F.log_softmax(x, dim=1)
-
-
-class GNN(torch.nn.Module):
-    def __init__(self, features, edge_index, batch_size, num_user, num_item, dim_id, dim_latent=None):
-        super(GNN, self).__init__()
-        self.batch_size = batch_size
-        self.num_user = num_user
-        self.num_item = num_item
-        self.dim_id = dim_id
-        self.dim_feat = features.size(1)
-        self.dim_latent = dim_latent
-        self.edge_index = edge_index
-        self.features = features
-
-        self.preference = nn.Embedding(num_user, self.dim_latent)
-        nn.init.xavier_normal_(self.preference.weight).cuda()
-        if self.dim_latent:
-            #self.preference = nn.init.xavier_normal_(torch.rand((num_user, self.dim_latent), requires_grad=True)).cuda()
-            self.MLP = nn.Linear(self.dim_feat, self.dim_latent)
-
-            self.conv_embed_1 = GraphGAT(self.dim_latent, self.dim_latent, aggr='add')
-            nn.init.xavier_normal_(self.conv_embed_1.weight)
-            self.linear_layer1 = nn.Linear(self.dim_latent, self.dim_id)
-            nn.init.xavier_normal_(self.linear_layer1.weight)
-            self.g_layer1 = nn.Linear(self.dim_latent, self.dim_id)    
-            nn.init.xavier_normal_(self.g_layer1.weight) 
-        else:
-            #self.preference = nn.init.xavier_normal_(torch.rand((num_user, self.dim_feat), requires_grad=True)).cuda()
-            self.conv_embed_1 = GraphGAT(self.dim_feat, self.dim_feat, aggr='add')
-            nn.init.xavier_normal_(self.conv_embed_1.weight)
-            self.linear_layer1 = nn.Linear(self.dim_feat, self.dim_id)
-            nn.init.xavier_normal_(self.linear_layer1.weight)
-            self.g_layer1 = nn.Linear(self.dim_feat, self.dim_id)    
-            nn.init.xavier_normal_(self.g_layer1.weight)
-
-        self.conv_embed_2 = GraphGAT(self.dim_id, self.dim_id, aggr='add')
-        nn.init.xavier_normal_(self.conv_embed_2.weight)
-        self.linear_layer2 = nn.Linear(self.dim_id, self.dim_id)
-        nn.init.xavier_normal_(self.linear_layer2.weight)
-        self.g_layer2 = nn.Linear(self.dim_id, self.dim_id)    
-        nn.init.xavier_normal_(self.g_layer2.weight)
-
-    def forward(self, id_embedding):
-        temp_features = torch.tanh(self.MLP(self.features)) if self.dim_latent else self.features
-        x = torch.cat((self.preference.weight, temp_features), dim=0)
-        x = F.normalize(x).cuda()
-
-        #layer-1
-        h = F.leaky_relu(self.conv_embed_1(x, self.edge_index, None))
-        x_hat = F.leaky_relu(self.linear_layer1(x)) + id_embedding.weight
-        x_1 = F.leaky_relu(self.g_layer1(h)+x_hat)
-        return x_1
-        # layer-2
-        h = F.leaky_relu(self.conv_embed_2(x_1, self.edge_index, None))
-        x_hat = F.leaky_relu(self.linear_layer2(x_1)) + id_embedding.weight
-        x_2 = F.leaky_relu(self.g_layer2(h)+x_hat)
-
-        x = torch.cat((x_1, x_2), dim=1)
-
-        return x
+        return x;
+        #return F.log_softmax(x, dim=1)
 
 class CrossCBR(nn.Module):
     def __init__(self, conf, raw_graph):
@@ -350,30 +212,6 @@ class CrossCBR(nn.Module):
         print(f'B_feature shape: {B_feature.shape}')
         print(f'B_feature: {B_feature}')
 
-        #layer = GATLayer(64, 64, num_heads=1)
-
-        #indices = graph._indices()
-        #A_feature = torch.unsqueeze(A_feature, 0)
-        #B_feature = torch.unsqueeze(B_feature, 0)
-        #max_v = 0
-        # for i in range(indices.shape[0]):
-        #     for j in range(indices.shape[1]):
-        #         if indices[i][j] > max_v:
-                    # max_v = indices[i][j]
-        #max_v = 40807
-        # indices_temp = torch.zeros((max_v, max_v))
-
-        # row_1 = indices[0]
-        # row_2 = indices[1]
-
-        # for i in range(max_v):
-            # indices_temp[indices[row_1][i]][indices[row_2][i]] = 1
-
-        #indices = torch.unsqueeze(indices_temp, 0)
-        # print(f'indices: {indices}')
-        # print(f'max: {max_v}')
-        #A_feature = layer(A_feature.to('cpu'), indices.to('cpu'), print_attn_probs=True)
-        #B_feature = layer(B_feature.to('cpu'), indices.to('cpu'), print_attn_probs=True)
         features = torch.cat((A_feature, B_feature), 0).to('cpu')
         print(f'device features: {features.device}')
         all_features = [features]
@@ -382,16 +220,13 @@ class CrossCBR(nn.Module):
         print(f'shape all_features: {features.shape}')
         for i in range(self.num_layers):
             # spmm <=> torch.sparse.mm -> multiply two matrix
-            features = torch.spmm(graph.to('cpu'), features)
-            embedding_input = 64
-            embedding_output= 64
             layerGAT = self.GAT_model.to('cpu')
-            #print(f'device layerGAT: {layerGAT.device}')
+            features = layerGAT(features, graph.to('cpu'))
+            #features = torch.spmm(graph.to('cpu'), features)
             if self.conf["aug_type"] == "MD" and not test: # !!! important
                 features = mess_dropout(features)
 
-            features = features / (i+2)
-            #features = layerGAT(features, graph.to('cpu'))
+            #features = features / (i+2)
             all_features.append(F.normalize(features, p=2, dim=1))
 
         all_features = torch.stack(all_features, 1)
@@ -400,8 +235,8 @@ class CrossCBR(nn.Module):
         A_feature, B_feature = torch.split(all_features, (A_feature.shape[0], B_feature.shape[0]), 0)
         A_feature = A_feature.to('cuda:0')
         B_feature = B_feature.to('cuda:0')
-        print(f'device A_feature: {A_feature.device}')
-        print(f'device B_feature: {B_feature.device}')
+        # print(f'device A_feature: {A_feature.device}')
+        # print(f'device B_feature: {B_feature.device}')
 
         return A_feature, B_feature
 
@@ -427,14 +262,14 @@ class CrossCBR(nn.Module):
         else:
             # item_level_graph: ui_matrix
             IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph, self.users_feature, self.items_feature, self.item_level_dropout, test)
-            print(f'users_feature: {self.users_feature}')
-            print(f'users_feature shape: {self.users_feature.shape}')
-            print(f'items_feature: {self.items_feature}')
-            print(f'items_feature shape: {self.items_feature.shape}')
-            print(f'IL_users_feature: {IL_users_feature}')
-            print(f'IL_users_feature shape: {IL_users_feature.shape}')
-            print(f'IL_items_feature: {IL_items_feature}')
-            print(f'IL_items_feature: {IL_items_feature.shape}')
+            # print(f'users_feature: {self.users_feature}')
+            # print(f'users_feature shape: {self.users_feature.shape}')
+            # print(f'items_feature: {self.items_feature}')
+            # print(f'items_feature shape: {self.items_feature.shape}')
+            # print(f'IL_users_feature: {IL_users_feature}')
+            # print(f'IL_users_feature shape: {IL_users_feature.shape}')
+            # print(f'IL_items_feature: {IL_items_feature}')
+            # print(f'IL_items_feature: {IL_items_feature.shape}')
 
         # aggregate the items embeddings within one bundle to obtain the bundle representation
         IL_bundles_feature = self.get_IL_bundle_rep(IL_items_feature, test)
