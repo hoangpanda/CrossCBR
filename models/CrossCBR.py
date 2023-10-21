@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import scipy.sparse as sp 
 import torch_geometric.transforms as T
-from torch_geometric.nn import GATConv, GATv2Conv, GCNConv, GraphConv
+from torch_geometric.nn import GATConv, GATv2Conv, GCNConv, GraphConv, TransformerConv
 from GraphGAT import GraphGAT
 
 
@@ -56,15 +56,16 @@ class GAT(nn.Module):
         self.embedding_output_size = 64
         self.conv1 = GATv2Conv(self.embedding_input_size, self.in_head, heads=self.hid)
         self.conv2 = GATv2Conv(self.hid*self.in_head, self.embedding_output_size, heads=self.out_head)
-
+        self.transformer_conv_1 = TransformerConv(self.embedding_input_size, self.in_head, heads=self.hid)
+        self.transformer_conv_2 = TransformerConv(self.hid*self.in_head, self.embedding_output_size, heads=self.out_head)
 
     def forward(self, features, graph):
         x, edge_index = features, graph._indices()
         x = F.dropout(x, p=0.4, training=self.training)
-        x = self.conv1(x, edge_index)
+        x = self.transformer_conv_1(x, edge_index)
         x = F.relu(x)
         x = F.dropout(x, p=0.4, training=self.training)
-        x = self.conv2(x, edge_index)
+        x = self.transformer_conv_2(x, edge_index)
         return x;
         #return F.log_softmax(x, dim=1)
 
@@ -221,10 +222,10 @@ class CrossCBR(nn.Module):
         print(f'shape all_features: {features.shape}')
         for i in range(self.num_layers):
             # spmm <=> torch.sparse.mm -> multiply two matrix
-            # layerGAT = self.GAT_model.to('cpu')
-            # features = layerGAT(features, graph.to('cpu'))
-            layerGraphConv = self.GraphConv().to('cpu')
-            features = layerGraphConv(features, graph.to('cpu')._indices())
+            layerGAT = self.GAT_model.to('cpu')
+            features = layerGAT(features, graph.to('cpu'))
+            # layerGraphConv = self.GraphConv().to('cpu')
+            # features = layerGraphConv(features, graph.to('cpu')._indices())
             #features = torch.spmm(graph.to('cpu'), features)
             if self.conf["aug_type"] == "MD" and not test: # !!! important
                 features = mess_dropout(features)
