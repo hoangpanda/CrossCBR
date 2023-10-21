@@ -54,7 +54,7 @@ class GAT(nn.Module):
         self.out_head = 1
         self.embedding_input_size = 64
         self.embedding_output_size = 64
-        self.conv1 = GAT2Conv(self.embedding_input_size, self.in_head, heads=self.hid)
+        self.conv1 = GATConv(self.embedding_input_size, self.in_head, heads=self.hid)
         self.conv2 = GATConv(self.hid*self.in_head, self.embedding_output_size, heads=self.out_head)
 
 
