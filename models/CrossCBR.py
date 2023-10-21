@@ -382,8 +382,7 @@ class CrossCBR(nn.Module):
         print(f'shape all_features: {features.shape}')
         for i in range(self.num_layers):
             # spmm <=> torch.sparse.mm -> multiply two matrix
-            #gnn = GNN(64, graph._indices().to('cpu'))
-            #features = torch.spmm(graph.to('cpu'), features)
+            features = torch.spmm(graph.to('cpu'), features)
             embedding_input = 64
             embedding_output= 64
             layerGAT = self.GAT_model.to('cpu')
@@ -391,8 +390,8 @@ class CrossCBR(nn.Module):
             if self.conf["aug_type"] == "MD" and not test: # !!! important
                 features = mess_dropout(features)
 
-            #features = features / (i+2)
-            features = layerGAT(features, graph.to('cpu'))
+            features = features / (i+2)
+            #features = layerGAT(features, graph.to('cpu'))
             all_features.append(F.normalize(features, p=2, dim=1))
 
         all_features = torch.stack(all_features, 1)
