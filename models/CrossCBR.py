@@ -59,7 +59,7 @@ class GAT(nn.Module):
         self.transformer_conv_2 = TransformerConv(self.hid*self.in_head, self.embedding_output_size, heads=self.out_head)
         self.SuperGATConv_1 = SuperGATConv(self.embedding_input_size, self.in_head, heads=self.hid)
         self.SuperGATConv_2 = SuperGATConv(self.hid*self.in_head, self.embedding_output_size, heads=self.out_head)
-        self.SSGConv = SSGConv(self.embedding_input_size, self.embedding_output_size, aplha=0.5)
+        self.SSGConv = SSGConv(self.embedding_input_size, self.embedding_output_size, alpha=0.5)
 
     def forward(self, features, graph):
         x, edge_index = features, graph._indices()
