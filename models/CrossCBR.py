@@ -63,11 +63,14 @@ class GAT(nn.Module):
 
     def forward(self, features, graph):
         x, edge_index = features, graph._indices()
-        # x = F.dropout(x, p=0.5, training=self.training)
+        x = F.dropout(x, p=0.5, training=self.training)
         # x = self.SuperGATConv_1(x, edge_index)
         # x = F.relu(x)
         # x = F.dropout(x, p=0.5, training=self.training)
         # x = self.SuperGATConv_2(x, edge_index)
+        x = self.SSGConv(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.5, training=self.training)
         x = self.SSGConv(x, edge_index)
         return x;
         #return F.log_softmax(x, dim=1)
