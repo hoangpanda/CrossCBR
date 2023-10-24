@@ -8,6 +8,7 @@ import scipy.sparse as sp
 import torch_geometric.transforms as T
 from torch_geometric.nn import GATConv, GATv2Conv, GCNConv, GraphConv, TransformerConv
 from torch_geometric.nn import SuperGATConv, SSGConv
+ 
 
 def cal_bpr_loss(pred):
     # pred: [bs, 1+neg_num]
@@ -227,15 +228,15 @@ class CrossCBR(nn.Module):
         print(f'shape all_features: {features.shape}')
         for i in range(self.num_layers):
             # spmm <=> torch.sparse.mm -> multiply two matrix
-            layerGAT = self.GAT_model.to('cpu')
-            features = layerGAT(features, graph.to('cpu'))
+            #layerGAT = self.GAT_model.to('cpu')
+            #features = layerGAT(features, graph.to('cpu'))
             # layerGraphConv = self.GraphConv().to('cpu')
             # features = layerGraphConv(features, graph.to('cpu')._indices())
-            #features = torch.spmm(graph.to('cpu'), features)
+            features = torch.spmm(graph.to('cpu'), features)
             if self.conf["aug_type"] == "MD" and not test: # !!! important
                 features = mess_dropout(features)
 
-            #features = features / (i+2)
+            features = features / (i+2)
             all_features.append(F.normalize(features, p=2, dim=1))
 
         all_features = torch.stack(all_features, 1)
@@ -343,7 +344,7 @@ class CrossCBR(nn.Module):
         c_loss = c_loss*0.5
         #alpha_c_loss = 0.8
         #c_loss = (u_cross_view_cl*alpha_c_loss + (1-alpha_c_loss)*b_cross_view_cl) / len(c_losses)
-
+        
         return bpr_loss, c_loss
 
 

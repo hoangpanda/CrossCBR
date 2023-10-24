@@ -24,7 +24,7 @@ def get_cmd():
     parser.add_argument("-m", "--model", default="CrossCBR", type=str, help="which model to use, options: CrossCBR")
     parser.add_argument("-i", "--info", default="", type=str, help="any auxilary info that will be appended to the log file name")
     args = parser.parse_args()
-
+    
     return args
 
 
