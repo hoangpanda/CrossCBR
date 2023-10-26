@@ -63,6 +63,8 @@ def main():
 
     for lr, l2_reg, item_level_ratio, bundle_level_ratio, bundle_agg_ratio, embedding_size, num_layers, c_lambda, c_temp in \
             product(conf['lrs'], conf['l2_regs'], conf['item_level_ratios'], conf['bundle_level_ratios'], conf['bundle_agg_ratios'], conf["embedding_sizes"], conf["num_layerss"], conf["c_lambdas"], conf["c_temps"]):
+
+        
         log_path = "./log/%s/%s" %(conf["dataset"], conf["model"])
         run_path = "./runs/%s/%s" %(conf["dataset"], conf["model"])
         checkpoint_model_path = "./checkpoints/%s/%s/model" %(conf["dataset"], conf["model"])
