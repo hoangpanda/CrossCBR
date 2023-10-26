@@ -44,6 +44,8 @@ def main():
         conf = conf[dataset_name]
     conf["dataset"] = dataset_name
     conf["model"] = paras["model"]
+
+    print('preparing run Datasets')
     dataset = Datasets(conf)
 
     conf["gpu"] = paras["gpu"]
