@@ -230,13 +230,13 @@ class CrossCBR(nn.Module):
             # spmm <=> torch.sparse.mm -> multiply two matrix
             #layerGAT = self.GAT_model.to('cpu')
             #features = layerGAT(features, graph.to('cpu'))
-            # layerGraphConv = self.GraphConv().to('cpu')
-            # features = layerGraphConv(features, graph.to('cpu')._indices())
-            features = torch.spmm(graph.to('cpu'), features)
+            layerGraphConv = self.GraphConv().to('cpu')
+            features = layerGraphConv(features, graph.to('cpu')._indices())
+            #features = torch.spmm(graph.to('cpu'), features)
             if self.conf["aug_type"] == "MD" and not test: # !!! important
                 features = mess_dropout(features)
 
-            features = features / (i+2)
+            #features = features / (i+2)
             all_features.append(F.normalize(features, p=2, dim=1))
 
         all_features = torch.stack(all_features, 1)
@@ -245,8 +245,6 @@ class CrossCBR(nn.Module):
         A_feature, B_feature = torch.split(all_features, (A_feature.shape[0], B_feature.shape[0]), 0)
         A_feature = A_feature.to('cuda:0')
         B_feature = B_feature.to('cuda:0')
-        # print(f'device A_feature: {A_feature.device}')
-        # print(f'device B_feature: {B_feature.device}')
 
         return A_feature, B_feature
 
