@@ -27,7 +27,7 @@ def get_cmd():
     
     return args
 
-    
+
 def main():
     print('THIS IS MAIN FUNCTION')
     conf = yaml.safe_load(open("./config.yaml"))
@@ -109,7 +109,7 @@ def main():
         # model
         if conf['model'] == 'CrossCBR':
             model = CrossCBR(conf, dataset.graphs).to(device)
-            #print('LOADED MODEL')
+            print('LOADED MODEL')
         else:
             raise ValueError("Unimplemented model %s" %(conf["model"]))
 
