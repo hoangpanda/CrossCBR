@@ -27,7 +27,7 @@ def get_cmd():
     
     return args
 
-
+    
 def main():
     print('THIS IS MAIN FUNCTION')
     conf = yaml.safe_load(open("./config.yaml"))
