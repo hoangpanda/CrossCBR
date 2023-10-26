@@ -94,7 +94,10 @@ class Datasets():
 
         u_b_for_neg_sample, b_b_for_neg_sample = None, None
 
+        # no problem 
+        print('before run bundle_train_data')
         self.bundle_train_data = BundleTrainDataset(conf, u_b_pairs_train, u_b_graph_train, self.num_bundles, u_b_for_neg_sample, b_b_for_neg_sample, conf["neg_num"])
+        print('after run bundle_train_data')
         self.bundle_val_data = BundleTestDataset(u_b_pairs_val, u_b_graph_val, u_b_graph_train, self.num_users, self.num_bundles)
         self.bundle_test_data = BundleTestDataset(u_b_pairs_test, u_b_graph_test, u_b_graph_train, self.num_users, self.num_bundles)
 
@@ -158,7 +161,7 @@ class Datasets():
     def get_ub(self, task):
         with open(os.path.join(self.path, self.name, 'user_bundle_{}.txt'.format(task)), 'r') as f:
             u_b_pairs = list(map(lambda s: tuple(int(i) for i in s[:-1].split('\t')), f.readlines()))
-            
+
         indice = np.array(u_b_pairs, dtype=np.int32)
         values = np.ones(len(u_b_pairs), dtype=np.float32)
         u_b_graph = sp.coo_matrix(

@@ -47,6 +47,7 @@ def main():
 
     print('preparing run Datasets')
     dataset = Datasets(conf)
+    print('done run Datasets')
 
     conf["gpu"] = paras["gpu"]
     conf["info"] = paras["info"]
