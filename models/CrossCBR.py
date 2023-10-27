@@ -353,7 +353,7 @@ class CrossCBR(nn.Module):
             self.get_item_level_graph()
             self.get_bundle_level_graph()
             self.get_bundle_agg_graph()
-
+        
         # users: [bs, 1]
         # bundles: [bs, 1+neg_num]
         users, bundles = batch

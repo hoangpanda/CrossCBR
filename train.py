@@ -148,6 +148,9 @@ def main():
             for batch_i, batch in pbar:
                 # batch: data
                 # batch_i: index of data
+
+                print('HERE')
+
                 model.train(True)
                 optimizer.zero_grad()
                 batch = [x.to(device) for x in batch]
