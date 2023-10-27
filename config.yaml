@@ -52,8 +52,55 @@ clothing:
 
   c_lambdas: [0.1]
   c_temps: [0.25]
-  epochs: 50
+  epochs: 100
   test_interval: 5
+
+electronic:
+  data_path: './datasets'
+  batch_size_train: 1024
+  batch_size_test: 1024
+  topk: [1, 5, 10, 20, 40, 80]
+  neg_num: 1
+
+  # the following are the best settings
+  aug_type: "ED"
+  ed_interval: 1
+  embedding_sizes: [64]
+  num_layerss: [1]
+  lrs: [1.0e-3]
+  item_level_ratios: [0.1]
+  bundle_level_ratios: [0.3]
+  bundle_agg_ratios: [0.1]
+  l2_regs: [1.0e-4]
+
+  c_lambdas: [0.1]
+  c_temps: [0.25]
+  epochs: 100
+  test_interval: 5
+
+food:
+  data_path: './datasets'
+  batch_size_train: 1024
+  batch_size_test: 1024
+  topk: [1, 5, 10, 20, 40, 80]
+  neg_num: 1
+
+  # the following are the best settings
+  aug_type: "ED"
+  ed_interval: 1
+  embedding_sizes: [64]
+  num_layerss: [1]
+  lrs: [1.0e-3]
+  item_level_ratios: [0.1]
+  bundle_level_ratios: [0.3]
+  bundle_agg_ratios: [0.1]
+  l2_regs: [1.0e-4]
+
+  c_lambdas: [0.1]
+  c_temps: [0.25]
+  epochs: 100
+  test_interval: 5
+
 
 NetEase:
   data_path: './datasets'
