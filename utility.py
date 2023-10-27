@@ -114,7 +114,7 @@ class Datasets():
             name = name.split("_")[0]
         with open(os.path.join(self.path, self.name, '{}_data_size.txt'.format(name)), 'r') as f:
             return [int(s) for s in f.readline().split('\t')][:3]
-
+    
 
     def get_aux_graph(self, u_i_graph, b_i_graph, conf):
         u_b_from_i = u_i_graph @ b_i_graph.T
