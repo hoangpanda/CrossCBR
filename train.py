@@ -198,6 +198,7 @@ def init_best_metrics(conf):
     for key in best_metrics:
         best_metrics[key]["recall"] = {}
         best_metrics[key]["ndcg"] = {}
+        best_metrics[key]["hr"] = {}
     for topk in conf['topk']:
         for key, res in best_metrics.items():
             for metric in res:
