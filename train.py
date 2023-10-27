@@ -288,7 +288,7 @@ def test(model, dataloader, conf):
 
 
 def get_metrics(metrics, grd, pred, topks):
-    tmp = {"recall": {}, "ndcg": {}}
+    tmp = {"recall": {}, "ndcg": {}, "hr": {}}
     for topk in topks:
         _, col_indice = torch.topk(pred, topk)
     #    col_indice = col_indice.to('cpu')
@@ -311,6 +311,7 @@ def get_metrics(metrics, grd, pred, topks):
 
         tmp["recall"][topk] = get_recall(pred, grd, is_hit, topk)
         tmp["ndcg"][topk] = get_ndcg(pred, grd, is_hit, topk)
+        tmp["hr"][topk] = get_hr(pred, grd, is_hit, topk)
 
     for m, topk_res in tmp.items():
         for topk, res in topk_res.items():
@@ -319,6 +320,12 @@ def get_metrics(metrics, grd, pred, topks):
 
     return metrics
 
+
+
+def get_hr(pred, grd, is_hit, topk):
+    num_users = pred.shape[0]
+    num_users_with_hit = (is_hit.sum(dim=1) > 0).sum().item()
+    return [num_users_with_hit, num_users]
 
 def get_recall(pred, grd, is_hit, topk):
     epsilon = 1e-8
