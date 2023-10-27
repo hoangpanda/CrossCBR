@@ -347,6 +347,7 @@ class CrossCBR(nn.Module):
 
 
     def forward(self, batch, ED_drop=False):
+        print('123 FORWARD')
         # the edge drop can be performed by every batch or epoch, should be controlled in the train loop
         if ED_drop:
             self.get_item_level_graph()
