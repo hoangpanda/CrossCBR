@@ -265,7 +265,7 @@ def log_metrics(conf, model, metrics, run, log_path, checkpoint_model_path, chec
 
 def test(model, dataloader, conf):
     tmp_metrics = {}
-    for m in ["recall", "ndcg"]:
+    for m in ["recall", "ndcg", "hr"]:
         tmp_metrics[m] = {}
         for topk in conf["topk"]:
             tmp_metrics[m][topk] = [0, 0]
@@ -326,6 +326,8 @@ def get_hr(pred, grd, is_hit, topk):
     num_users = pred.shape[0]
     num_users_with_hit = (is_hit.sum(dim=1) > 0).sum().item()
     return [num_users_with_hit, num_users]
+
+
 
 def get_recall(pred, grd, is_hit, topk):
     epsilon = 1e-8
