@@ -219,8 +219,8 @@ def write_log(run, log_path, topk, step, metrics):
         run.add_scalar("%s_%d/Val" %(m, topk), val_score[topk], step)
         run.add_scalar("%s_%d/Test" %(m, topk), test_score[topk], step)
 
-    val_str = "%s, Top_%d, Val:  recall: %f, ndcg: %f" %(curr_time, topk, val_scores["recall"][topk], val_scores["ndcg"][topk])
-    test_str = "%s, Top_%d, Test: recall: %f, ndcg: %f" %(curr_time, topk, test_scores["recall"][topk], test_scores["ndcg"][topk])
+    val_str = "%s, Top_%d, Val:  recall: %f, ndcg: %f, hr: %f" %(curr_time, topk, val_scores["recall"][topk], val_scores["ndcg"][topk], val_scores["hr"][topk])
+    test_str = "%s, Top_%d, Test: recall: %f, ndcg: %f, hr: %f" %(curr_time, topk, test_scores["recall"][topk], test_scores["ndcg"][topk], test_scores["hr"][topk])
 
     log = open(log_path, "a")
     log.write("%s\n" %(val_str))
@@ -251,8 +251,8 @@ def log_metrics(conf, model, metrics, run, log_path, checkpoint_model_path, chec
                 for metric in res:
                     best_metrics[key][metric][topk] = metrics[key][metric][topk]
 
-            best_perform["test"][topk] = "%s, Best in epoch %d, TOP %d: REC_T=%.5f, NDCG_T=%.5f" %(curr_time, best_epoch, topk, best_metrics["test"]["recall"][topk], best_metrics["test"]["ndcg"][topk])
-            best_perform["val"][topk] = "%s, Best in epoch %d, TOP %d: REC_V=%.5f, NDCG_V=%.5f" %(curr_time, best_epoch, topk, best_metrics["val"]["recall"][topk], best_metrics["val"]["ndcg"][topk])
+            best_perform["test"][topk] = "%s, Best in epoch %d, TOP %d: REC_T=%.5f, NDCG_T=%.5f, HR_T=%.5f" %(curr_time, best_epoch, topk, best_metrics["test"]["recall"][topk], best_metrics["test"]["ndcg"][topk], best_metrics["test"]["hr"][topk])
+            best_perform["val"][topk] = "%s, Best in epoch %d, TOP %d: REC_V=%.5f, NDCG_V=%.5f, HR_T=%5.f" %(curr_time, best_epoch, topk, best_metrics["val"]["recall"][topk], best_metrics["val"]["ndcg"][topk], best_metrics["val"]["hr"][topk])
             print(best_perform["val"][topk])
             print(best_perform["test"][topk])
             log.write(best_perform["val"][topk] + "\n")
