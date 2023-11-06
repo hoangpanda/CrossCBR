@@ -139,7 +139,7 @@ class CrossCBR(nn.Module):
                 item_level_graph = sp.coo_matrix((values, (graph.row, graph.col)), shape=graph.shape).tocsr()
 
         self.item_level_graph = to_tensor(laplace_transform(item_level_graph)).to(device)
-        print(f'self.item_level_graph: {self.item_level_graph}')
+        # print(f'self.item_level_graph: {self.item_level_graph}')
 
 
     def get_item_level_graph_ori(self):
@@ -212,20 +212,20 @@ class CrossCBR(nn.Module):
 
 
     def one_propagate(self, graph, A_feature, B_feature, mess_dropout, test):
-        print(f'graph: {graph}')
+        # print(f'graph: {graph}')
         graph_indices = graph._indices()
-        print(f'graph indices: {graph_indices}   ')
-        print(f'A_feature shape: {A_feature.shape}')
-        print(f'A_feature: {A_feature}')
-        print(f'B_feature shape: {B_feature.shape}')
-        print(f'B_feature: {B_feature}')
+        # print(f'graph indices: {graph_indices}   ')
+        # print(f'A_feature shape: {A_feature.shape}')
+        # print(f'A_feature: {A_feature}')
+        # print(f'B_feature shape: {B_feature.shape}')
+        # print(f'B_feature: {B_feature}')
 
         features = torch.cat((A_feature, B_feature), 0).to('cpu')
-        print(f'device features: {features.device}')
+        # print(f'device features: {features.device}')
         all_features = [features]
-        print(f'all_features: {all_features}')
+        # print(f'all_features: {all_features}')
 
-        print(f'shape all_features: {features.shape}')
+        # print(f'shape all_features: {features.shape}')
         for i in range(self.num_layers):
             # spmm <=> torch.sparse.mm -> multiply two matrix
             #layerGAT = self.GAT_model.to('cpu')
@@ -347,7 +347,6 @@ class CrossCBR(nn.Module):
 
 
     def forward(self, batch, ED_drop=False):
-        print('123 FORWARD')
         # the edge drop can be performed by every batch or epoch, should be controlled in the train loop
         if ED_drop:
             self.get_item_level_graph()
@@ -357,8 +356,6 @@ class CrossCBR(nn.Module):
         # users: [bs, 1]
         # bundles: [bs, 1+neg_num]
         users, bundles = batch
-    #    print(f'BATCH: {batch}')
-        print('BAT DAU CHAY HAM SELF.PROPAGATE()')
         users_feature, bundles_feature = self.propagate()
 
         users_embedding = [i[users].expand(-1, bundles.shape[1], -1) for i in users_feature]

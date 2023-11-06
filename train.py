@@ -116,41 +116,25 @@ def main():
             model = CrossCBR(conf, dataset.graphs).to(device)
             print('LOADED MODEL')
         else:
-            raise ValueError("Unimplemented model %s" %(conf["model"]))
-
-        #print('MODEL INFOR: {}'.format(model))
-        #print(model.ui_graph)
-        #x = model.item_level_graph_ori
-        #print(x)
-        
+            raise ValueError("Unimplemented model %s" %(conf["model"]))    
 
         optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=conf["l2_reg"])
 
-        #print(f'dataset.graph: {dataset.graphs}')
 
         batch_cnt = len(dataset.train_loader)
-    #    print(f'batch_cnt: {batch_cnt}')
 
         test_interval_bs = int(batch_cnt * conf["test_interval"])
         ed_interval_bs = int(batch_cnt * conf["ed_interval"])
 
         best_metrics, best_perform = init_best_metrics(conf)
         best_epoch = 0
-    #    print(f'l2_regs: {conf["l2_regs"]}')
-        # conf['epochs'] = 0
         for epoch in range(conf['epochs']):
             epoch_anchor = epoch * batch_cnt
-        #    print(f'epoch_anchor: {epoch_anchor}')
             model.train(True)
             pbar = tqdm(enumerate(dataset.train_loader), total=len(dataset.train_loader))
 
 
             for batch_i, batch in pbar:
-                # batch: data
-                # batch_i: index of data
-
-                print('HERE')
-
                 model.train(True)
                 optimizer.zero_grad()
                 batch = [x.to(device) for x in batch]
@@ -220,8 +204,8 @@ def write_log(run, log_path, topk, step, metrics):
         run.add_scalar("%s_%d/Val" %(m, topk), val_score[topk], step)
         run.add_scalar("%s_%d/Test" %(m, topk), test_score[topk], step)
 
-    val_str = "%s, Top_%d, Val:  recall: %f, ndcg: %f, hr: %f" %(curr_time, topk, val_scores["recall"][topk], val_scores["ndcg"][topk], val_scores["hr"][topk])
-    test_str = "%s, Top_%d, Test: recall: %f, ndcg: %f, hr: %f" %(curr_time, topk, test_scores["recall"][topk], test_scores["ndcg"][topk], test_scores["hr"][topk])
+    val_str = "%s, Top_%d, Val:  recall: %f, ndcg: %f" %(curr_time, topk, val_scores["recall"][topk], val_scores["ndcg"][topk])
+    test_str = "%s, Top_%d, Test: recall: %f, ndcg: %f" %(curr_time, topk, test_scores["recall"][topk], test_scores["ndcg"][topk])
 
     log = open(log_path, "a")
     log.write("%s\n" %(val_str))
@@ -292,23 +276,12 @@ def get_metrics(metrics, grd, pred, topks):
     tmp = {"recall": {}, "ndcg": {}, "hr": {}}
     for topk in topks:
         _, col_indice = torch.topk(pred, topk)
-    #    col_indice = col_indice.to('cpu')
-        print()
-        print('col_indice device: {}'.format(col_indice.device))
         row_indice = torch.zeros_like(col_indice) + torch.arange(pred.shape[0], device=pred.device, dtype=torch.long).view(-1, 1)
-
         print('row_indice device: {}'.format(row_indice.device))
-    #    row_indice = row_indice.to('cpu')
-
-    #    print('grd: {}'.format(grd))
 
         col_indice = col_indice.to('cpu')
         row_indice = row_indice.to('cpu')
-
-        print('grd device: {}'.format(grd.device))
         is_hit = grd[row_indice.view(-1), col_indice.view(-1)].view(-1, topk)
-        print('is_hit device: {}'.format(is_hit.device))
-    #    is_hit = is_hit.to(pred.device)
 
         tmp["recall"][topk] = get_recall(pred, grd, is_hit, topk)
         tmp["ndcg"][topk] = get_ndcg(pred, grd, is_hit, topk)
@@ -320,13 +293,6 @@ def get_metrics(metrics, grd, pred, topks):
                 metrics[m][topk][i] += x
 
     return metrics
-
-
-
-def get_hr(pred, grd, is_hit, topk):
-    num_users = pred.shape[0]
-    num_users_with_hit = (is_hit.sum(dim=1) > 0).sum().item()
-    return [num_users_with_hit, num_users]
 
 
 
