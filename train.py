@@ -182,7 +182,6 @@ def init_best_metrics(conf):
     for key in best_metrics:
         best_metrics[key]["recall"] = {}
         best_metrics[key]["ndcg"] = {}
-        best_metrics[key]["hr"] = {}
     for topk in conf['topk']:
         for key, res in best_metrics.items():
             for metric in res:
@@ -236,8 +235,8 @@ def log_metrics(conf, model, metrics, run, log_path, checkpoint_model_path, chec
                 for metric in res:
                     best_metrics[key][metric][topk] = metrics[key][metric][topk]
 
-            best_perform["test"][topk] = "%s, Best in epoch %d, TOP %d: REC_T=%.5f, NDCG_T=%.5f, HR_T=%.5f" %(curr_time, best_epoch, topk, best_metrics["test"]["recall"][topk], best_metrics["test"]["ndcg"][topk], best_metrics["test"]["hr"][topk])
-            best_perform["val"][topk] = "%s, Best in epoch %d, TOP %d: REC_V=%.5f, NDCG_V=%.5f, HR_T=%5.f" %(curr_time, best_epoch, topk, best_metrics["val"]["recall"][topk], best_metrics["val"]["ndcg"][topk], best_metrics["val"]["hr"][topk])
+            best_perform["test"][topk] = "%s, Best in epoch %d, TOP %d: REC_T=%.5f, NDCG_T=%.5f" %(curr_time, best_epoch, topk, best_metrics["test"]["recall"][topk], best_metrics["test"]["ndcg"][topk])
+            best_perform["val"][topk] = "%s, Best in epoch %d, TOP %d: REC_V=%.5f, NDCG_V=%.5f" %(curr_time, best_epoch, topk, best_metrics["val"]["recall"][topk], best_metrics["val"]["ndcg"][topk])
             print(best_perform["val"][topk])
             print(best_perform["test"][topk])
             log.write(best_perform["val"][topk] + "\n")
@@ -250,7 +249,7 @@ def log_metrics(conf, model, metrics, run, log_path, checkpoint_model_path, chec
 
 def test(model, dataloader, conf):
     tmp_metrics = {}
-    for m in ["recall", "ndcg", "hr"]:
+    for m in ["recall", "ndcg"]:
         tmp_metrics[m] = {}
         for topk in conf["topk"]:
             tmp_metrics[m][topk] = [0, 0]
@@ -273,7 +272,7 @@ def test(model, dataloader, conf):
 
 
 def get_metrics(metrics, grd, pred, topks):
-    tmp = {"recall": {}, "ndcg": {}, "hr": {}}
+    tmp = {"recall": {}, "ndcg": {}}
     for topk in topks:
         _, col_indice = torch.topk(pred, topk)
         row_indice = torch.zeros_like(col_indice) + torch.arange(pred.shape[0], device=pred.device, dtype=torch.long).view(-1, 1)
@@ -285,7 +284,6 @@ def get_metrics(metrics, grd, pred, topks):
 
         tmp["recall"][topk] = get_recall(pred, grd, is_hit, topk)
         tmp["ndcg"][topk] = get_ndcg(pred, grd, is_hit, topk)
-        tmp["hr"][topk] = get_hr(pred, grd, is_hit, topk)
 
     for m, topk_res in tmp.items():
         for topk, res in topk_res.items():
