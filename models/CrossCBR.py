@@ -281,7 +281,7 @@ class CrossCBR(nn.Module):
 
         # aggregate the items embeddings within one bundle to obtain the bundle representation
         IL_bundles_feature = self.get_IL_bundle_rep(IL_items_feature, test)
-        print(f'IL_items_feature: {IL_bundles_feature}')
+        # print(f'IL_items_feature: {IL_bundles_feature}')
 
         #  ============================= bundle level propagation =============================
         if test:
