@@ -275,7 +275,9 @@ def get_metrics(metrics, grd, pred, topks):
     tmp = {"recall": {}, "ndcg": {}}
     print(f'top_k list: {topks}')
     print(f'grd: {grd}')
+    print(f'grd shape: {grd.shape}')
     print(f'pred: {pred}')
+    print(f'pred shape: {pred.shape}')
     print(f'metrics: {metrics}')
     for topk in topks:
         _, col_indice = torch.topk(pred, topk)
