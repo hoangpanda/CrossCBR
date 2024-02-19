@@ -19,7 +19,7 @@ def print_statistics(X, string):
     print('Non-zero rows', len(unique_nonzero_row_indice)/X.shape[0])
     print('Non-zero columns', len(unique_nonzero_col_indice)/X.shape[1])
     print('Matrix density', len(nonzero_row_indice)/(X.shape[0]*X.shape[1]))
-
+    
 
 class BundleTrainDataset(Dataset):
     def __init__(self, conf, u_b_pairs, u_b_graph, num_bundles, u_b_for_neg_sample, b_b_for_neg_sample, neg_sample=1):
