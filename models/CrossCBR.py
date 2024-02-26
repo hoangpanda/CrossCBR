@@ -345,8 +345,8 @@ class CrossCBR(nn.Module):
         users, bundles = batch
         users_feature, bundles_feature = self.propagate()
 
-        print(f'shape of user_feature: {users_feature.shape}')
-        print(f'shape of bundle_feature: {bundles_feature}')
+        print(f'shape of user_feature: {torch.tensor(users_feature).shape}')
+        print(f'shape of bundle_feature: {torch.tensor(bundles_feature).shape}')
 
         users_embedding = [i[users].expand(-1, bundles.shape[1], -1) for i in users_feature]
         bundles_embedding = [i[bundles] for i in bundles_feature]
