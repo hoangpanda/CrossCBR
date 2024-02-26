@@ -29,7 +29,6 @@ def get_cmd():
 
 
 def main():
-    print('THIS IS MAIN FUNCTION')
     conf = yaml.safe_load(open("./config.yaml"))
     print("load config file done!")
 
@@ -59,7 +58,6 @@ def main():
     os.environ['CUDA_VISIBLE_DEVICES'] = conf["gpu"]
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     conf["device"] = device
-    print(conf)
 
     for lr, l2_reg, item_level_ratio, bundle_level_ratio, bundle_agg_ratio, embedding_size, num_layers, c_lambda, c_temp in \
             product(conf['lrs'], conf['l2_regs'], conf['item_level_ratios'], conf['bundle_level_ratios'], conf['bundle_agg_ratios'], conf["embedding_sizes"], conf["num_layerss"], conf["c_lambdas"], conf["c_temps"]):
@@ -121,15 +119,15 @@ def main():
         optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=conf["l2_reg"])
 
 
-        batch_cnt = len(dataset.train_loader)
+        batch_cnt = len(dataset.train_loader) # bao nhiêu batch size 
 
-        test_interval_bs = int(batch_cnt * conf["test_interval"])
+        test_interval_bs = int(batch_cnt * conf["test_interval"]) # sau bao nhiêu epochs train thì test 
         ed_interval_bs = int(batch_cnt * conf["ed_interval"])
 
         best_metrics, best_perform = init_best_metrics(conf)
         best_epoch = 0
         for epoch in range(conf['epochs']):
-            epoch_anchor = epoch * batch_cnt
+            epoch_anchor = epoch * batch_cnt # theo dõi số lượng batch đã được huấn luyện trong toàn bộ quá trình
             model.train(True)
             pbar = tqdm(enumerate(dataset.train_loader), total=len(dataset.train_loader))
 
@@ -289,7 +287,7 @@ def get_metrics(metrics, grd, pred, topks):
         col_indice = col_indice.to('cpu')
         row_indice = row_indice.to('cpu')
         is_hit = grd[row_indice.view(-1), col_indice.view(-1)].view(-1, topk)
-
+        
         tmp["recall"][topk] = get_recall(pred, grd, is_hit, topk)
         tmp["ndcg"][topk] = get_ndcg(pred, grd, is_hit, topk)
 

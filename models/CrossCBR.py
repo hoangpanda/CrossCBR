@@ -26,11 +26,12 @@ def cal_bpr_loss(pred):
 
 
 def laplace_transform(graph):
+    # chuẩn hóa 
     rowsum_sqrt = sp.diags(1/(np.sqrt(graph.sum(axis=1).A.ravel()) + 1e-8))
     colsum_sqrt = sp.diags(1/(np.sqrt(graph.sum(axis=0).A.ravel()) + 1e-8))
     graph = rowsum_sqrt @ graph @ colsum_sqrt
 
-    return graph
+    return graph 
 
 
 def to_tensor(graph):
@@ -88,6 +89,7 @@ class CrossCBR(nn.Module):
         self.num_bundles = conf["num_bundles"]
         self.num_items = conf["num_items"]
 
+        # khởi tạo embedding
         self.init_emb()
 
         assert isinstance(raw_graph, list)
@@ -107,6 +109,7 @@ class CrossCBR(nn.Module):
 
         self.num_layers = self.conf["num_layers"]
         self.c_temp = self.conf["c_temp"]
+        # edit layer
         self.GAT_model = GAT()
         self.GraphConv = GraphConv(64, 64)
 
@@ -146,14 +149,6 @@ class CrossCBR(nn.Module):
         ui_graph = self.ui_graph # user item
         device = self.device
         item_level_graph = sp.bmat([[sp.csr_matrix((ui_graph.shape[0], ui_graph.shape[0])), ui_graph], [ui_graph.T, sp.csr_matrix((ui_graph.shape[1], ui_graph.shape[1]))]])
-
-        # normalize layer LightGCN
-        #print(f'BEFORE: {item_level_graph}')
-
-        #x = laplace_transform(item_level_graph)
-        # print(f'LAPLACE TRANSFORM: {x}')
-        # print(f'shape of LAPLACE TRANSFORM: {x.shape}')
-        # print(f'type of LAPLACE TRANSFORM: {type(x)}')
 
         self.item_level_graph_ori = to_tensor(laplace_transform(item_level_graph)).to(device)
         
@@ -208,9 +203,6 @@ class CrossCBR(nn.Module):
         bi_graph = sp.diags(1/bundle_size.A.ravel()) @ bi_graph
         self.bundle_agg_graph_ori = to_tensor(bi_graph).to(device)
 
-
-
-
     def one_propagate(self, graph, A_feature, B_feature, mess_dropout, test):
         # print(f'graph: {graph}')
         graph_indices = graph._indices()
@@ -220,26 +212,22 @@ class CrossCBR(nn.Module):
         # print(f'B_feature shape: {B_feature.shape}')
         # print(f'B_feature: {B_feature}')
 
-        features = torch.cat((A_feature, B_feature), 0).to('cpu')
-        # print(f'device features: {features.device}')
-        all_features = [features]
-        # print(f'all_features: {all_features}')
-
-        # print(f'shape all_features: {features.shape}')
+        features = torch.cat((A_feature, B_feature), 0).to('cpu') # user feature and bundle feature 
+        all_features = [features] 
         for i in range(self.num_layers):
-            # spmm <=> torch.sparse.mm -> multiply two matrix
             #layerGAT = self.GAT_model.to('cpu')
             #features = layerGAT(features, graph.to('cpu'))
             #layerGraphConv = self.GraphConv().to('cpu')
             #features = layerGraphConv(features, graph.to('cpu')._indices())
-            features = torch.spmm(graph.to('cpu'), features)
+            features = torch.spmm(graph.to('cpu'), features) # spmm <=> torch.sparse.mm -> multiply two matrix
             if self.conf["aug_type"] == "MD" and not test: # !!! important
+                # không test thì sẽ tạo data augmentation
                 features = mess_dropout(features)
 
             features = features / (i+2)
             all_features.append(F.normalize(features, p=2, dim=1))
 
-        all_features = torch.stack(all_features, 1)
+        all_features = torch.stack(all_features, 1) 
         all_features = torch.sum(all_features, dim=1).squeeze(1)
 
         A_feature, B_feature = torch.split(all_features, (A_feature.shape[0], B_feature.shape[0]), 0)
@@ -248,13 +236,11 @@ class CrossCBR(nn.Module):
 
         return A_feature, B_feature
 
-
-
     def get_IL_bundle_rep(self, IL_items_feature, test):
         if test:
             IL_bundles_feature = torch.matmul(self.bundle_agg_graph_ori, IL_items_feature)
         else:
-            IL_bundles_feature = torch.matmul(self.bundle_agg_graph, IL_items_feature)
+            IL_bundles_feature = torch.matmul(self.bundle_agg_graph, IL_items_feature) # (B x I) x (I x d) -> (B x d)
 
         # simple embedding dropout on bundle embeddings
         if self.conf["bundle_agg_ratio"] != 0 and self.conf["aug_type"] == "MD" and not test:
@@ -264,6 +250,7 @@ class CrossCBR(nn.Module):
 
 
     def propagate(self, test=False):
+        # lightGCN with item view and bundle view
         #  =============================  item level propagation  =============================
         if test:
             IL_users_feature, IL_items_feature = self.one_propagate(self.item_level_graph_ori, self.users_feature, self.items_feature, self.item_level_dropout, test)
@@ -357,6 +344,9 @@ class CrossCBR(nn.Module):
         # bundles: [bs, 1+neg_num]
         users, bundles = batch
         users_feature, bundles_feature = self.propagate()
+
+        print(f'shape of user_feature: {users_feature.shape}')
+        print(f'shape of bundle_feature: {bundles_feature}')
 
         users_embedding = [i[users].expand(-1, bundles.shape[1], -1) for i in users_feature]
         bundles_embedding = [i[bundles] for i in bundles_feature]
